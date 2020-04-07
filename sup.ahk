@@ -160,10 +160,28 @@ u::
 send, {mbutton}
 return
 sc039::Click
+sc039 & n::
+send, {end}
+return
+sc039 & m::
+send, {home}
+return
 i::Click
 o::Click Right
 RAlt::
-Click 2
+if(hold_mouse == null)
+{
+hold_mouse := 0
+}
+hold_mouse := !hold_mouse
+if(hold_mouse == 1)
+{
+Click, Down
+}
+else
+{
+Click, Up
+}
 return
 RWin::
 Click 2
@@ -613,7 +631,7 @@ return
 Sc15d & `;::
 Send,!{F4}
 return
-sc15d & k::
+RAlt & /::
 if(arrow_switch==null)
 arrow_switch := 0
 arrow_switch := !arrow_switch
@@ -898,8 +916,7 @@ else if(Touch_Keyboard == 1)
 Right_Volume := 1
 Check_Right_Working := 0
 touchpad_mouse_wheel_pr :=0
-Gui, PG_SL:Destroy
-gosub call_Select_Program_Gui
+gosub, chrome_search
 break
 }
 Sleep, 100
@@ -1689,10 +1706,25 @@ tooltip,something wrong
 sleep,2000
 tooltip
 return
+chrome_search:
 sc039 & RAlt::
 tab & 1::
 clipboard := ""
+Keywait, rbutton
 Send, ^c
+if(clipboard==null && GetKeyState("sc039", "P")==0)
+{
+tooltip, chrome search on, 0,0
+Keywait, rbutton, D
+Keywait, rbutton
+Send, ^c
+tooltip,
+if(clipboard==null)
+{
+goto, chrome_inco_search
+return
+}
+}
 ClipWait
 googleSearch:="http://www.google.com/search?q="
 httpRegEx:="https?://"
@@ -1702,7 +1734,17 @@ return
 sc039 & sc15d::
 tab & 4::
 clipboard := ""
+chrome_inco_search:
 Send, ^c
+if(clipboard==null && GetKeyState("sc039", "P")==0)
+{
+tooltip, chrome incognito search on, 0,0
+Keywait, rbutton, D
+Send, ^c
+tooltip,
+if(clipboard==null)
+return
+}
 ClipWait
 googleSearch:="http://www.google.com/search?q="
 httpRegEx:="https?://"
@@ -2138,6 +2180,10 @@ pic_fixed_label := picture_fixed_label
 break
 }
 }
+return
+!v::
+sleep, 200
+FileCopy, %Image_copy_path%, % Explorer_GetSelection()
 return
 #If (Active)
 LAlt & sc039::
@@ -2716,6 +2762,384 @@ return
 can_tool_paper:
 tooltip,
 return
+powerPlanAutoManage()
+{
+Global
+getPowerState()
+if ( loopCounter < 1)
+loopCounter := 0
+if ( loopCounter = 0 )
+Gosub, getactivePOWERscheme
+loopCounter += 1
+If acLineStatus = 0
+{
+IfNotEqual, powerStateChange, 1
+{
+IfNotEqual, currentPowerScheme, %powerSaver%
+{
+loggingSystem("switching to powersaver")
+Run, %comspec% /c powercfg -setactive %powerSaver%, , Hide
+powerStateChange:=1
+}
+}
+}
+Else If acLineStatus = 1
+{
+IfNotEqual, powerStateChange, 2
+{
+IfNotEqual, currentPowerScheme, %highPerformance%
+{
+loggingSystem("switching to high performance")
+Run, %comspec% /c powercfg -setactive %highPerformance%, , Hide
+powerStateChange:=2
+}
+}
+}
+}
+getactivePOWERscheme:
+currentPowerScheme := StdOutToVar("powercfg -getactivescheme")
+StringSplit, stringOut, currentPowerScheme, %A_Space%
+currentPowerScheme = %stringOut4%
+return
+powerPlanStateInfo()
+{
+Global
+If acLineStatus = 0
+acLineStatus = Offline
+Else If acLineStatus = 1
+acLineStatus = Online
+Else If acLineStatus = 255
+acLineStatus = Unknown
+If batteryFlag = 0
+batteryFlag = Not being charged - Between 33 and 66 percent
+Else If batteryFlag = 1
+batteryFlag =  High - More than 66 percent
+Else If batteryFlag = 2
+batteryFlag = Low - Less than 33 percent
+Else If batteryFlag = 4
+batteryFlag = Critical - Less than 5 percent
+Else If batteryFlag = 8
+batteryFlag = Charging
+Else If batteryFlag = 128
+batteryFlag = No system battery
+Else If batteryFlag = 255
+batteryFlag = Unknown
+If batteryLifePercent = 255
+batteryLifePercent = Unknown
+Else
+batteryLifePercent = %batteryLifePercent%`%
+If batteryLifeTime = -1
+batteryLifeTime = Unknown
+Else
+batteryLifeTime := GetFormatedTime(batteryLifeTime)
+If batteryFullLifeTime = -1
+batteryFullLifeTime = Unknown
+Else
+batteryFullLifeTime := GetFormatedTime(batteryFullLifeTime)
+output =
+(
+
+AC Status: %acLineStatus%
+
+Battery state and capacity: %batteryFlag%
+
+Battery Life: %batteryLifePercent%
+
+Remaining Battery Life: %batteryLifeTime%
+
+Full Battery Life: %batteryFullLifeTime%
+
+)
+Msg(output , "br", 1, 5)
+Return
+}
+Msg(title, body="", loc="bl", fixedwidth=0, time=0) {
+global msgtransp, hwndmsg, MonBottom, MonRight
+SetTimer, MsgStay, Off
+SetTimer, MsgFadeOut, Off
+Gui,77:Destroy
+Gui,77:+AlwaysOnTop +ToolWindow -SysMenu -Caption +LastFound
+hwndmsg := WinExist()
+WinSet, ExStyle, +0x20
+WinSet, Transparent, 160
+msgtransp := 160
+Gui,77:Color, 000000
+Gui,77:Font, c5C5CF0 s17 wbold, Arial
+Gui,77:Add, Text, x20 y12, %title%
+If(body) {
+Gui,77:Font, cF0F0F0 s15 wnorm
+Gui,77:Add, Text, x20 y56, %body%
+}
+If(fixedwidth) {
+Gui,77:Show, NA W700
+} else {
+Gui,77:Show, NA
+}
+WinGetPos,ix,iy,w,h, ahk_id %hwndmsg%
+if(loc) {
+x := InStr(loc,"l") ? 0 : InStr(loc,"c") ? (MonRight-w)/2 : InStr(loc,"r") ? A_ScreenWidth-w : 0
+y := InStr(loc,"t") ? 0 : InStr(loc,"m") ? (MonBottom-h)/2 : InStr(loc,"b") ? MonBottom - h : MonBottom - h
+} else {
+x := 0
+y := MonBottom - h
+}
+WinMove, ahk_id %hwndmsg%,,x,y
+If(time) {
+time *= 1000
+SetTimer, MsgStay, %time%
+} else {
+SetTimer, MsgFadeOut, 500
+}
+}
+MsgStay:
+SetTimer, MsgStay, Off
+SetTimer, MsgFadeOut, 100
+Return
+MsgFadeOut:
+If(msgtransp > 0) {
+msgtransp -= 4
+WinSet, Transparent, %msgtransp%, ahk_id %hwndmsg%
+} Else {
+SetTimer, MsgFadeOut, Off
+Gui,77:Destroy
+}
+Return
+del::
+send, {del}
+return
+del & sc045::
+getPowerState()
+Life_Time:=GetFormatedTime(batteryLifeTime)
+Gui, show_battery2:add, text, ,%batteryLifePercent%`%`,%Life_Time%
+Gui, show_battery2: +AlwaysOnTop -Caption +ToolWindow
+Gui, show_battery2:show
+keywait, del
+Settimer, battery_destroy2 , -250
+return
+battery_destroy2:
+Gui, show_battery2:destroy
+return
+del & sc137::
+if(show_battery_window=null)
+show_battery_window:=0
+if(show_battery_window=1)
+{
+WinSet, transparent, 240, transparent_text
+getPowerState()
+Life_Time:=GetFormatedTime(batteryLifeTime)
+FormatTime, TimeString,,Time
+GuiControl,show_battery:text, battery_info, %batteryLifePercent%`%`n%Life_Time%`nMark time: %TimeString%
+}
+else
+WinSet, transparent, 0, transparent_text
+show_battery_window:=!show_battery_window
+return
+assist_battery:
+getPowerState()
+Life_Time:=GetFormatedTime(batteryLifeTime)
+FormatTime, TimeString,,Time
+if(temp_battery=null)
+temp_battery:=batteryLifeTime
+if(batteryLifeTime!=temp_battery)
+{
+GuiControl,show_battery:text, battery_info, %batteryLifePercent%`%`n%Life_Time%`nMark time: %TimeString%
+}
+temp_battery:=batteryLifeTime
+if(batteryLifePercent>100)
+{
+WinSet, transparent, 0, transparent_text
+}
+else if(batteryLifePercent>=85 || batteryLifePercent<=20)
+{
+WinSet, transparent, 240, transparent_text
+}
+else if(batteryLifePercent<85 && batteryLifePercent>20)
+{
+WinSet, transparent,0, transparent_text
+if(batteryLifePercent<=60 && batteryLifePercent>59)
+{
+tooltip,60`%,,,8
+sleep,1000
+tooltip,,,,8
+}
+else if(batteryLifePercent<=50 && batteryLifePercent>49)
+{
+tooltip,50`%,,,8
+sleep,1000
+tooltip,,,,8
+}
+else if(batteryLifePercent<=40 && batteryLifePercent>39)
+{
+tooltip,40`%,,,8
+sleep,1000
+tooltip,,,,8
+}
+else if(batteryLifePercent<=30 && batteryLifePercent>28)
+{
+tooltip,30`%,,,8
+sleep,1000
+tooltip,,,,8
+}
+}
+return
+loggingSystem(messageToLog)
+{
+IfNotExist, %A_ScriptName%.ini
+{
+IniWrite, 1, %A_ScriptName%.ini, LOGGING, logActivation
+}
+IniRead, logStat, %A_ScriptName%.ini, LOGGING, logActivation, 1
+IfEqual, logStat, 1
+{
+FileAppend,
+(
+`n`n[%A_DDDD%.%A_DD%.%A_MMMM%.%A_YYYY%] %A_Username% [%A_Hour%:%A_Min%:%A_Sec%]     %messageToLog%
+), %A_ScriptName%.log.log
+}
+}
+StdOutToVar(cmd)
+{
+DllCall("CreatePipe", "PtrP", hReadPipe, "PtrP", hWritePipe, "Ptr", 0, "UInt", 0)
+DllCall("SetHandleInformation", "Ptr", hWritePipe, "UInt", 1, "UInt", 1)
+VarSetCapacity(PROCESS_INFORMATION, (A_PtrSize == 4 ? 16 : 24), 0)
+cbSize := VarSetCapacity(STARTUPINFO, (A_PtrSize == 4 ? 68 : 104), 0)
+NumPut(cbSize, STARTUPINFO, 0, "UInt")
+NumPut(0x100, STARTUPINFO, (A_PtrSize == 4 ? 44 : 60), "UInt")
+NumPut(hWritePipe, STARTUPINFO, (A_PtrSize == 4 ? 60 : 88), "Ptr")
+NumPut(hWritePipe, STARTUPINFO, (A_PtrSize == 4 ? 64 : 96), "Ptr")
+if !DllCall(
+	(Join Q C
+		"CreateProcess",             ; http://goo.gl/9y0gw
+		"Ptr",  0,                   ; lpApplicationName
+		"Ptr",  &cmd,                ; lpCommandLine
+		"Ptr",  0,                   ; lpProcessAttributes
+		"Ptr",  0,                   ; lpThreadAttributes
+		"UInt", true,                ; bInheritHandles
+		"UInt", 0x08000000,          ; dwCreationFlags
+		"Ptr",  0,                   ; lpEnvironment
+		"Ptr",  0,                   ; lpCurrentDirectory
+		"Ptr",  &STARTUPINFO,        ; lpStartupInfo
+		"Ptr",  &PROCESS_INFORMATION ; lpProcessInformation
+)) {
+DllCall("CloseHandle", "Ptr", hWritePipe)
+DllCall("CloseHandle", "Ptr", hReadPipe)
+return ""
+}
+DllCall("CloseHandle", "Ptr", hWritePipe)
+VarSetCapacity(buffer, 4096, 0)
+while DllCall("ReadFile", "Ptr", hReadPipe, "Ptr", &buffer, "UInt", 4096, "UIntP", dwRead, "Ptr", 0)
+sOutput .= StrGet(&buffer, dwRead, "CP0")
+DllCall("CloseHandle", "Ptr", NumGet(PROCESS_INFORMATION, 0))
+DllCall("CloseHandle", "Ptr", NumGet(PROCESS_INFORMATION, A_PtrSize))
+DllCall("CloseHandle", "Ptr", hReadPipe)
+return sOutput
+}
+getPowerState()
+{
+Global
+VarSetCapacity(powerStatus, 1+1+1+1+4+4)
+success := DllCall("GetSystemPowerStatus", "UInt", &powerStatus)
+If (ErrorLevel != 0 OR success = 0)
+{
+MsgBox 16, Power Status, Can't get the power status...
+Exit
+}
+acLineStatus := GetInteger(powerStatus, 0, false, 1)
+batteryFlag := GetInteger(powerStatus, 1, false, 1)
+batteryLifePercent := GetInteger(powerStatus, 2, false, 1)
+batteryLifeTime := GetInteger(powerStatus, 4, true)
+batteryFullLifeTime := GetInteger(powerStatus, 8, true)
+}
+powerStateMessage()
+{
+Global
+If acLineStatus = 0
+acLineStatus = Offline
+Else If acLineStatus = 1
+acLineStatus = Online
+Else If acLineStatus = 255
+acLineStatus = Unknown
+If batteryFlag = 0
+batteryFlag = Not being charged - Between 33 and 66 percent
+Else If batteryFlag = 1
+batteryFlag =  High - More than 66 percent
+Else If batteryFlag = 2
+batteryFlag = Low - Less than 33 percent
+Else If batteryFlag = 4
+batteryFlag = Critical - Less than 5 percent
+Else If batteryFlag = 8
+batteryFlag = Charging
+Else If batteryFlag = 128
+batteryFlag = No system battery
+Else If batteryFlag = 255
+batteryFlag = Unknown
+If batteryLifePercent = 255
+batteryLifePercent = Unknown
+Else
+batteryLifePercent = %batteryLifePercent%`%
+If batteryLifeTime = -1
+batteryLifeTime = Unknown
+Else
+batteryLifeTime := GetFormatedTime(batteryLifeTime)
+If batteryFullLifeTime = -1
+batteryFullLifeTime = Unknown
+Else
+batteryFullLifeTime := GetFormatedTime(batteryFullLifeTime)
+output =
+(
+
+AC Status: %acLineStatus%
+
+Battery state and capacity: %batteryFlag%
+
+Battery Life: %batteryLifePercent%
+
+Remaining Battery Life: %batteryLifeTime%
+
+Full Battery Life: %batteryFullLifeTime%
+
+)
+MsgBox 262208, Power Status, %output%
+Return
+}
+GetInteger(ByRef @source, _offset = 0, _bIsSigned = false, _size = 4)
+{
+local result
+Loop %_size%
+{
+result += *(&@source + _offset + A_Index-1) << 8*(A_Index-1)
+}
+If (!_bIsSigned OR _size > 4 OR result < 0x80000000)
+Return result
+return -(0xFFFFFFFF - result + 1)
+}
+GetFormatedTime(_seconds)
+{
+local h, m, s, t
+h := _seconds // 3600
+_seconds -= h * 3600
+m := _seconds // 60
+s := _seconds - m * 60
+If (h > 1)
+t := h . " hours"
+Else IF (h = 1)
+t := "1 hour"
+If (t != "" and m + s > 0)
+t := t . " "
+If (m > 1)
+t := t . m . " minutes"
+Else If (m = 1)
+t := t . "1 minute"
+If (t != "" and s > 0)
+t := t . " "
+If (s > 1)
+t := t . s . " seconds"
+Else If (s = 1)
+t := t . "1 second"
+Else If (t = "")
+t := "0 seconds"
+Return t
+}
 sc039 & LShift::
 winset, alwaysontop, , A
 WinSet, Style, -0xC00000, A
@@ -2723,4 +3147,11 @@ return
 sc039 & Rshift::
 winset, style, +0xc00000, A
 winset, alwaysontop, , A
+return
+LWin & capslock::
+SetCapsLockState, on
+send, ^#{right}
+return
+LWin & LShift::
+send, ^#{left}
 return
