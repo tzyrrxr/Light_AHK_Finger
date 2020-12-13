@@ -84,3 +84,19 @@ lalt & ,::send, ^{delete}
 
 
 lalt & a::send, {enter}
+
+capslock & u::
+	send, ^c
+	return
+capslock & i::
+	send, ^v
+	return
+capslock & m::
+	send, ^s
+	return
+capslock & ,::
+	send, ^a
+	return
+capslock & .::
+	send, ^x
+	return
