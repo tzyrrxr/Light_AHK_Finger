@@ -7,6 +7,18 @@
 gosub, clip_image_parameter
 
 
+;----------------------------------------   program_select
+gosub, Program_Select_parameter
+
+
+;----------------------------------------   get title
+gosub, getTitleParameter
+gosub, getTitleParameter2
+gosub, getTitleParameter3
+
+
+;----------------------------------------   edit table
+gosub, WhiteBoard_parameter
 
 ;--------------------
 ;-- Parameter End ---
@@ -17,6 +29,256 @@ return
 
 ;============== Parameter ===============
 ;========================================
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+;@@@@@@@@@@@@@@ Function @@@@@@@@@@@@@@
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	;function	open local explorer
+;detect path
+;reference;
+;write by errorseven
+;website: stack overflow
+;https://stackoverflow.com/questions/39253268/autohotkey-and-windows-10-how-to-get-current-explorer-path/39263800#39263800
+;---------------------------------------------------
+Explorer_GetSelection(hwnd="") {
+    WinGet, process, processName, % "ahk_id" hwnd := hwnd? hwnd:WinExist("A")
+    WinGetClass class, ahk_id %hwnd%
+    if  (process = "explorer.exe") {
+        if (class ~= "(Cabinet|Explore)WClass") {
+            for window in ComObjCreate("Shell.Application").Windows
+                if  (window.hwnd==hwnd)
+                    path := window.Document.FocusedItem.path
+
+            SplitPath, path,,dir
+        }
+        return dir
+	}
+}
+	;Function
+;--------------------------------------------------
+	;Show Mode of Key
+	Show_ToolTip(switch,displacement){
+		if(switch=1){
+			ToolTip,MK%displacement%,0,0,1
+		}
+		else if(switch=3)
+			ToolTip, NS,0,30,2
+		else if(switch=2)
+			ToolTip,,,,2
+		else
+			ToolTip,,,,1
+			ToolTip,,,,3
+	}
+	;mouse position tooltip
+	MS_RM:
+		tooltip,%SD%,,,4
+		if(Sd==5)
+		{
+			WinSet, Transparent, 100, MS_tr_5
+			WinSet, Transparent, 0, MS_tr_100
+			WinSet, Transparent, 0, MS_tr_350
+		}
+		else if(Sd==100)
+		{
+			WinSet, Transparent, 0, MS_tr_5
+			WinSet, Transparent, 100, MS_tr_100
+			WinSet, Transparent, 0, MS_tr_350
+		}
+		else if(Sd==350)
+		{
+			WinSet, Transparent, 0, MS_tr_5
+			WinSet, Transparent, 0, MS_tr_100
+			WinSet, Transparent, 100, MS_tr_350
+		}
+		return
+	MS_RM_close:
+		Settimer, Mouse_MouseKey_CK,off
+		tooltip,,,,4
+		if(MS_GUI_cancel_transparent!=1)
+		{
+			WinSet, Transparent, 0, MS_tr_5
+			WinSet, Transparent, 0, MS_tr_100
+			WinSet, Transparent, 0, MS_tr_350
+		}
+		MS_GUI_cancel_transparent := 0
+		return
+	hide_MS_RM:
+		tooltip,,,,4
+		WinSet, Transparent, 0, MS_tr_5
+		WinSet, Transparent, 0, MS_tr_100
+		WinSet, Transparent, 0, MS_tr_350
+		return
+	
+	;check mouse move
+	Mouse_MouseKey_CK:
+		MouseGetPos, Mouse_MouseKey_CK2x, Mouse_MouseKey_CK2y
+		if(Mouse_MouseKey_CK_Xpos != Mouse_MouseKey_CK2x && Mouse_MouseKey_CK_Ypos != Mouse_MouseKey_CK2y)
+		{
+			MS_GUI_cancel_transparent :=1
+			goto MS_RM_close
+		}
+		return
+
+;#################################################	file management
+/*
+capslock & sc039::	;open file
+	SetTimer, AlwaysOnTop_set_file, -300
+	FileSelectFile, file, M3
+	Loop, parse, file,`n
+	{
+		if(A_Index==1)
+			index1 := A_LoopField
+		else if(A_Index>=2)
+		{
+			;Run, Target , WorkingDir, Options, OutputVarPID
+			run, %index1%\%A_LoopField%, %index1%
+		}
+	}	
+	return
+*/
+AlwaysOnTop_set_file: ;open file
+	WinSet,AlwaysOnTop,On, Select File ;  - Switcher.ahk
+	WinSetTitle, Select File ,,Open files
+	return
+
+
+AlwaysOnTop_set:
+	WinSet,AlwaysOnTop,On, Select File ;  - Switcher.ahk
+	return
+
+capslock & tab::	;open clipboard content
+	clipboard := "" ;empty clipboard
+	Send, ^c
+	ClipWait
+	Run, %Clipboard%,,UseErrorLevel
+	if ErrorLevel
+		tooltip,something wrong
+	sleep,2000
+	tooltip
+	return
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;; check null directory or environment path
+check_directory_:
+	des =% Explorer_GetSelection()
+	StringSplit, count_environment, des, `;
+	if(count_environment0==0){
+		tooltip, Null Directory,,,8
+		settimer, can_tool_8, -2000
+		return
+	}
+	if(count_environment0>=5){
+		loop{
+			send, ^+n
+			sleep, 50
+			send, {enter} 
+			sleep, 200
+			des =% Explorer_GetSelection()
+			sleep, 200
+			new_dir = %des%\New folder*
+			if FileExist(new_dir)
+			{
+				break
+			}
+		}
+	}
+	return
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; temp new directory
+delete_temp_new_diretory:
+	des =% Explorer_GetSelection()
+	new_dir = %des%\New folder*
+	loop, Files, %new_dir%, D
+	{
+		FileRemoveDir, %A_LoopFileFullPath%
+	}
+	return
+;============== Function ==============
+;======================================
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+;@@@@@@@@@@@@@@ Tooltip @@@@@@@@@@@@@@@
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+pasteImage:
+	tooltip, paste image, , , 19
+	return
+
+;----------------------------------------   tooltip_cancel
+/*
+	tooltip,,,, number
+*/
+;==============================
+can_tool:
+	tooltip
+	return
+can_tool1:
+	tooltip,,,,1
+	return
+can_tool2:
+	tooltip,,,,2
+	return
+can_tool3:
+	tooltip,,,,3
+	return
+can_tool4:
+	tooltip,,,,4
+	return
+can_tool5:
+	tooltip,,,,5
+	return
+can_tool6:
+	tooltip,,,,6
+	return
+can_tool7:
+	tooltip,,,,7
+	return
+can_tool_8:
+can_tool8:
+	tooltip,,,,8
+	return
+can_tool9:
+	tooltip,,,,9
+	return
+can_tool10:
+	tooltip,,,,10
+	return
+can_tool11:
+	tooltip,,,,11
+	return
+can_tool12:
+	tooltip,,,,12
+	return
+can_tool13:
+	tooltip,,,,13
+	return
+can_tool14:
+	tooltip,,,,14
+	return
+can_tool15:
+	tooltip,,,,15
+	return
+can_tool16:
+	tooltip,,,,16
+	return
+can_tool17:
+	tooltip,,,,17
+	return
+can_tool18:
+	tooltip,,,,18
+	return
+can_tool19:
+	tooltip,,,,19
+	return
+can_tool20:
+	tooltip,,,,20
+	return
+ca_tool:
+	tooltip
+	return
+;============== Tooltip ===============
+;======================================
 
 ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 ;@@@@@@@@@@@@@@ clip_image @@@@@@@@@@@@@@
@@ -1233,10 +1495,9 @@ support_input_OK:
 	}
 	return
 
-
-;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-;@@@@@@@@@@@@@@ Label @@@@@@@@@@@@@@@
-;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+;@@@@@@@@@@@@@@ Label GUI @@@@@@@@@@@@@@@
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 ;;;;;;;;;;;;;;;;;;;;;;;; comment subject
 ;--------------------
@@ -1416,257 +1677,2414 @@ sign_bar_comment(sign_count, comment="blank_", comment_sign="@"){
 ;____________________
 
 
-;============== Label ===============
-;====================================
+;============== Label GUI ===============
+;========================================
 
-;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-;@@@@@@@@@@@@@@ Function @@@@@@@@@@@@@@
-;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-	;function	open local explorer
-;detect path
-;reference;
-;write by errorseven
-;website: stack overflow
-;https://stackoverflow.com/questions/39253268/autohotkey-and-windows-10-how-to-get-current-explorer-path/39263800#39263800
-;---------------------------------------------------
-Explorer_GetSelection(hwnd="") {
-    WinGet, process, processName, % "ahk_id" hwnd := hwnd? hwnd:WinExist("A")
-    WinGetClass class, ahk_id %hwnd%
-    if  (process = "explorer.exe") {
-        if (class ~= "(Cabinet|Explore)WClass") {
-            for window in ComObjCreate("Shell.Application").Windows
-                if  (window.hwnd==hwnd)
-                    path := window.Document.FocusedItem.path
-
-            SplitPath, path,,dir
-        }
-        return dir
-	}
-}
-	;Function
-;--------------------------------------------------
-	;Show Mode of Key
-	Show_ToolTip(switch,displacement){
-		if(switch=1){
-			ToolTip,MK%displacement%,0,0,1
-		}
-		else if(switch=3)
-			ToolTip, NS,0,30,2
-		else if(switch=2)
-			ToolTip,,,,2
-		else
-			ToolTip,,,,1
-			ToolTip,,,,3
-	}
-	;mouse position tooltip
-	MS_RM:
-		tooltip,%SD%,,,4
-		if(Sd==5)
-		{
-			WinSet, Transparent, 100, MS_tr_5
-			WinSet, Transparent, 0, MS_tr_100
-			WinSet, Transparent, 0, MS_tr_350
-		}
-		else if(Sd==100)
-		{
-			WinSet, Transparent, 0, MS_tr_5
-			WinSet, Transparent, 100, MS_tr_100
-			WinSet, Transparent, 0, MS_tr_350
-		}
-		else if(Sd==350)
-		{
-			WinSet, Transparent, 0, MS_tr_5
-			WinSet, Transparent, 0, MS_tr_100
-			WinSet, Transparent, 100, MS_tr_350
-		}
-		return
-	MS_RM_close:
-		Settimer, Mouse_MouseKey_CK,off
-		tooltip,,,,4
-		if(MS_GUI_cancel_transparent!=1)
-		{
-			WinSet, Transparent, 0, MS_tr_5
-			WinSet, Transparent, 0, MS_tr_100
-			WinSet, Transparent, 0, MS_tr_350
-		}
-		MS_GUI_cancel_transparent := 0
-		return
-	hide_MS_RM:
-		tooltip,,,,4
-		WinSet, Transparent, 0, MS_tr_5
-		WinSet, Transparent, 0, MS_tr_100
-		WinSet, Transparent, 0, MS_tr_350
-		return
-	
-	;check mouse move
-	Mouse_MouseKey_CK:
-		MouseGetPos, Mouse_MouseKey_CK2x, Mouse_MouseKey_CK2y
-		if(Mouse_MouseKey_CK_Xpos != Mouse_MouseKey_CK2x && Mouse_MouseKey_CK_Ypos != Mouse_MouseKey_CK2y)
-		{
-			MS_GUI_cancel_transparent :=1
-			goto MS_RM_close
-		}
-		return
-
-;#################################################	file management
-/*
-capslock & sc039::	;open file
-	SetTimer, AlwaysOnTop_set_file, -300
-	FileSelectFile, file, M3
-	Loop, parse, file,`n
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+;@@@@@@@@@@@@@@ Program Select @@@@@@@@@@@@@@
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+;------------------------------
+;-- Program Select Parameter --
+;------------------------------
+Program_Select_parameter:
+	IfNotExist Path\path.ini
 	{
-		if(A_Index==1)
-			index1 := A_LoopField
-		else if(A_Index>=2)
+		tempc:=1
+		loop 10
 		{
-			;Run, Target , WorkingDir, Options, OutputVarPID
-			run, %index1%\%A_LoopField%, %index1%
+			Name_%tempc% :="`t"
+			tempc++	
 		}
-	}	
-	return
-*/
-AlwaysOnTop_set_file: ;open file
-	WinSet,AlwaysOnTop,On, Select File ;  - Switcher.ahk
-	WinSetTitle, Select File ,,Open files
-	return
-
-
-AlwaysOnTop_set:
-	WinSet,AlwaysOnTop,On, Select File ;  - Switcher.ahk
+		tempc:=1
+		loop 10
+		{
+			Path_%tempc% :="`t"
+			tempc++	
+		}
+		FileCreateDir,Path
+		FileAppend,[Name]`nName_1=%Name_1% `nName_2=%Name_2%`nName_3=%Name_3% `nName_4=%Name_4% `nName_5=%Name_5% `nName_6=%Name_6% `nName_7=%Name_7% `nName_8=%Name_8% `nName_9=%Name_9% `nName_10=%Name_10% `n[Path]`nPath_1=%Path_1% `nPath_2=%Path_2% `nPath_3=%Path_3% `nPath_4=%Path_4% `nPath_5=%Path_5%`nPath_6=%Path_6% `nPath_7=%Path_7% `nPath_8=%Path_8% `nPath_9=%Path_9% `nPath_10=%Path_10% ,Path\path.ini
+	}
 	return
 
-capslock & tab::	;open clipboard content
-	clipboard := "" ;empty clipboard
-	Send, ^c
-	ClipWait
-	Run, %Clipboard%,,UseErrorLevel
-	if ErrorLevel
-		tooltip,something wrong
-	sleep,2000
-	tooltip
+;__ Program Select Parameter __
+;______________________________
+;open gui
+LAlt & 0::
+	Gui, PG_SL:Destroy
+	gosub call_Select_Program_Gui
 	return
+;##################################
+			try{
+				;;;;;;;;;;;;;;;;;;;;;
+				; check directory
+				gosub, check_directory_
+				;if(count_environment0==0)
+					;return
+				;;;;;;;;;;;;;;;;;;;;;
+			}
+			try{
+				;;;;;;;;;;;;;;;;;;;;;
+				; delete new directory
+				gosub, delete_temp_new_diretory
+				;;;;;;;;;;;;;;;;;;;;;
+			}
+RAlt & sc002::
+	Gui, PG_SL:Destroy
+	gosub call_Select_Program_Gui
+	gosub, Ch_1
+	Gui, PG_SL:Destroy
+	return
+RAlt & sc003:: ;sc003 > 2
+RAlt & 2::
+	Gui, PG_SL:Destroy
+	gosub call_Select_Program_Gui
+	gosub, Ch_2
+	Gui, PG_SL:Destroy
+	return
+RAlt & sc004:: ;sc004 > 3
+RAlt & 3::
+	Gui, PG_SL:Destroy
+	gosub call_Select_Program_Gui
+	gosub, Ch_3
+	Gui, PG_SL:Destroy
+	return
+RAlt & 4::
+	Gui, PG_SL:Destroy
+	gosub call_Select_Program_Gui
+	gosub, Ch_4
+	Gui, PG_SL:Destroy
+	return
+RAlt & 5::
+	Gui, PG_SL:Destroy
+	gosub call_Select_Program_Gui
+	gosub, Ch_5
+	Gui, PG_SL:Destroy
+	return
+RAlt & 6::
+	Gui, PG_SL:Destroy
+	gosub call_Select_Program_Gui
+	gosub, Ch_6
+	Gui, PG_SL:Destroy
+	return
+RAlt & 7::
+	Gui, PG_SL:Destroy
+	gosub call_Select_Program_Gui
+	gosub, Ch_7
+	Gui, PG_SL:Destroy
+	return
+RAlt & 8::
+	Gui, PG_SL:Destroy
+	gosub call_Select_Program_Gui
+	gosub, Ch_8
+	Gui, PG_SL:Destroy
+	return
+RAlt & 9::
+	Gui, PG_SL:Destroy
+	gosub call_Select_Program_Gui
+	gosub, Ch_9
+	Gui, PG_SL:Destroy
+	return
+RAlt & 0::
+	Gui, PG_SL:Destroy
+	gosub call_Select_Program_Gui
+	gosub, Ch_10
+	Gui, PG_SL:Destroy
+	return
+;##################################
+;##################################	Program Select
+call_Select_Program_Gui:
+	Gui,PG_SL:destroy
+	temp_N := 1
+	loop 10
+	{
+		IniRead,Name_%temp_N%,Path\path.ini,Name,Name_%temp_N%
+		temp_N++
+	}
+	temp_P := 1
+	
+	loop 10
+	{
+		IniRead,Path_%temp_P%,Path\path.ini,Path,Path_%temp_P%
+		temp_P++
+	}
+	;Apply and Confirm Button
+	;--------------------
+	Gui, PG_SL:Add, button, w48 h25 x423 y350 vapply_var gsave_apply, Apply
+	Gui, PG_SL:Add, button, w55 h25 x310 y350 vconfirm_var gsave_confirm default, Con&firm
 
 
+	Gui, PG_SL:Font, s20, System
+		;make a groupbox
+	Gui, PG_SL:Add, GroupBox, w465 h320 x10 y5
+		;title
+	Gui, PG_SL:Add, text, x15 y0, Name:
+	Gui, PG_SL:Add, text, x110 y0, Path:
 
+		;Name
+	;------------------------
+	Gui, PG_SL:Add, edit, w80 h25 x30 y20 vName_1 ,%Name_1%
+	num :=3
+	counter_ps :=2
+	temp_ar :=[]
+	loop 9
+	{
+		;var := Name_%counter_ps%
+		temp_ar[counter_ps] := Name_%counter_ps%
+		Gui, PG_SL:Add, edit, w80 h25 x30 y+5 vName_%counter_ps% ,% temp_ar[counter_ps]
+		num :=num+2
+		counter_ps++
+	}
+	Gui, PG_SL:Font, normal
 
-;;;;;;;;;;;;;;;;;;;;;;;; check null directory or environment path
-check_directory_:
-	des =% Explorer_GetSelection()
-	StringSplit, count_environment, des, `;
-	if(count_environment0==0){
-		tooltip, Null Directory,,,8
-		settimer, can_tool_8, -2000
+		;Path
+	;------------------------
+	Gui, PG_SL:Font, s12, Consolas
+	Gui, PG_SL:Add, edit, w250 h25 x+10 y20 vPath_1, %Path_1%
+	num :=4
+	counter_ps :=2
+	temp_ar :=[]
+	loop, 9
+	{
+		var :=Path_%counter_ps%
+		Gui, PG_SL:Add, edit, w250 h25 y+5 vPath_%counter_ps%     , %var%
+		counter_ps++
+		num := num+2
+	}
+	Gui, PG_SL:Font, normal
+
+		;Button
+	;------------------------
+	Gui, PG_SL:Font, s10, Corbel
+		;Blank Button
+	counter_ps :=1
+	Gui, PG_SL:Add, button, w43 h25 x+5 y20 vB_%counter_ps% gB_%counter_ps%, Blank
+	loop 9
+	{
+		counter_ps++
+		Gui, PG_SL:Add, button, w43 h25 y+5 vB_%counter_ps% gB_%counter_ps%, Blank
+	}
+		;Check Button
+	counter_ps := 1
+	Gui, PG_SL:Add, button, w48 h25 x+5 y20 vCh_%counter_ps% gCh_%counter_ps%, Check
+	loop, 9
+	{
+		counter_ps++
+		Gui, PG_SL:Add, button, w48 h25 y+5 vCh_%counter_ps% gCh_%counter_ps%, Check
+	}
+	Gui, PG_SL:Font, normal
+		;reset apply confirm cancel
+	;--------------------------------
+	Gui, PG_SL:Add, button, w65 h25 x5 y350 greset_button, Reset All
+	;Gui, PG_SL:Add, button, w48 h25 x423 y350 vapply_var gPG_SL_Apply, Apply
+	Gui, PG_SL:Add, button, w48 h25 x370 y350 vcancel_var gcancel_button , &Cancel
+	;Gui, PG_SL:Add, button, w55 h25 x310 y350 vconfirm_var gPG_SL_Confirm, Confirm
+	;Gui, +AlwaysOnTop +LastFound 
+	;Gui, PG_SL:+ToolWindow
+	;============ralt shortcut
+	if(GetKeyState("ralt","P")){
 		return
 	}
-	if(count_environment0>=5){
-		loop{
-			send, ^+n
-			sleep, 50
-			send, {enter} 
-			sleep, 200
-			des =% Explorer_GetSelection()
-			sleep, 200
-			new_dir = %des%\New folder*
-			if FileExist(new_dir)
+	;============
+	Gui, PG_SL:Show, w480 h380, Shortcut 
+	return
+
+save_apply:
+	GuiControl,Disable,apply_var
+	Gui, submit,nohide
+	save_name_temp := 1
+	loop 10
+	{
+		name_temp := Name_%save_name_temp%
+		IniWrite,%name_temp%,Path\path.ini,Name,Name_%save_name_temp%
+		save_name_temp++
+	}
+	save_path_temp := 1
+	loop 10
+	{
+		path_temp := Path_%save_path_temp%
+		IniWrite, %path_temp%,Path\path.ini,Path,Path_%save_path_temp%
+		
+		save_path_temp++
+	}
+	sleep,50
+	GuiControl, Enable,apply_var
+	return
+save_confirm:
+	Gui, submit,hide
+	save_name_temp := 1
+	loop 10
+	{
+		name_temp := Name_%save_name_temp%
+		IniWrite,%name_temp%,Path\path.ini,Name,Name_%save_name_temp%
+		save_name_temp++
+	}
+	save_path_temp := 1
+	loop 10
+	{
+		path_temp := Path_%save_path_temp%
+		IniWrite, %path_temp%,Path\path.ini,Path,Path_%save_path_temp%
+		
+		save_path_temp++
+	}
+	FileDelete,Path\temp.ini
+	return	
+cancel_button:
+	Gui,PG_SL:Submit,nohide
+	tempp := 1
+	loop 10
+	{
+		ntem :=Name_%tempp%
+		IniWrite,%ntem%,Path\temp.ini,Name,Name_%tempp%
+		tempp++
+	}
+	tempp := 1
+	loop 10
+	{
+		ntem :=Path_%tempp%
+		IniWrite,%ntem%,Path\temp.ini,Path,Path_%tempp%
+		tempp++
+	}
+	tempp := 1
+	loop 10
+	{
+		IniRead,chpn,Path\path.ini,Name,Name_%tempp%
+		IniRead,chtn,Path\temp.ini,Name,Name_%tempp%
+		IniRead,chpp,Path\path.ini,Path,Path_%tempp%
+		IniRead,chtp,Path\temp.ini,Path,Path_%tempp%
+		if(chpn!=chtn || chpp!=chtp)
+		{
+			Msgbox,3,Save,Do you want to save?
+			ifMsgbox Yes
+			{
+				savet := 1
+				loop 10
+				{
+					t1:=Name_%savet%
+					t2:=Path_%savet%
+					IniWrite,%t1%,Path\path.ini,Name,Name_%savet%
+					IniWrite,%t2%,Path\path.ini,Path,Path_%savet%
+					savet++
+				}
+				Gui,PG_SL:destroy
+				break
+			}
+			ifMsgbox No
+			{
+				Gui,PG_SL:destroy
+				break
+			}
+			else
 			{
 				break
 			}
+
 		}
+		tempp++
 	}
+	Gui,PG_SL:destroy
+	FileDelete,Path\temp.ini
 	return
 
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; temp new directory
-delete_temp_new_diretory:
-	des =% Explorer_GetSelection()
-	new_dir = %des%\New folder*
-	loop, Files, %new_dir%, D
+PG_SLGuiClose:
+	Gui,PG_SL:Submit,nohide
+	tempp := 1
+	loop 10
 	{
-		FileRemoveDir, %A_LoopFileFullPath%
+		ntem :=Name_%tempp%
+		IniWrite,%ntem%,Path\temp.ini,Name,Name_%tempp%
+		tempp++
 	}
+	tempp := 1
+	loop 10
+	{
+		ntem :=Path_%tempp%
+		IniWrite,%ntem%,Path\temp.ini,Path,Path_%tempp%
+		tempp++
+	}
+	tempp := 1
+	loop 10
+	{
+		IniRead,chpn,Path\path.ini,Name,Name_%tempp%
+		IniRead,chtn,Path\temp.ini,Name,Name_%tempp%
+		IniRead,chpp,Path\path.ini,Path,Path_%tempp%
+		IniRead,chtp,Path\temp.ini,Path,Path_%tempp%
+		if(chpn!=chtn || chpp!=chtp)
+		{
+			Msgbox,4,Save,Do you want to save?
+			ifMsgbox Yes
+			{
+				savet := 1
+				loop 10
+				{
+					t1:=Name_%savet%
+					t2:=Path_%savet%
+					IniWrite,%t1%,Path\path.ini,Name,Name_%savet%
+					IniWrite,%t2%,Path\path.ini,Path,Path_%savet%
+					savet++
+				}
+				Gui,PG_SL:destroy
+				break
+			}
+			else
+			{
+				Gui,PG_SL:destroy
+				break
+			}
+		}
+		tempp++
+	}
+	Gui,PG_SL:destroy
+	FileDelete,Path\temp.ini
 	return
-;============== Function ==============
-;======================================
-;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-;@@@@@@@@@@@@@@ Tooltip @@@@@@@@@@@@@@@
-;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-pasteImage:
-	tooltip, paste image, , , 19
+;Button select label
+	B_1:
+		GuiControl, Disable, B_1
+		GuiControl,PG_SL:, Name_1,
+		GuiControl, PG_SL:, Path_1,
+		Sleep, 50
+		GuiControl, Enable, B_1
+		return
+	B_2:
+		GuiControl, Disable, B_2
+		GuiControl,PG_SL:, Name_2,
+		GuiControl, PG_SL:, Path_2,
+		Sleep, 50
+		GuiControl, Enable, B_2
+		return
+	B_3:
+		GuiControl, Disable, B_3
+		GuiControl,PG_SL:, Name_3,
+		GuiControl, PG_SL:, Path_3,
+		Sleep, 50
+		GuiControl, Enable, B_3
+		return
+	B_4:
+		GuiControl, Disable, B_4
+		GuiControl,PG_SL:, Name_4,
+		GuiControl, PG_SL:, Path_4,
+		Sleep, 50
+		GuiControl, Enable, B_4
+		return
+	B_5:
+		GuiControl, Disable, B_5
+		GuiControl,PG_SL:, Name_5,
+		GuiControl, PG_SL:, Path_5,
+		Sleep, 50
+		GuiControl, Enable, B_5
+		return
+	B_6:
+		GuiControl, Disable, B_6
+		GuiControl,PG_SL:, Name_6,
+		GuiControl, PG_SL:, Path_6,
+		Sleep, 50
+		GuiControl, Enable, B_6
+		return
+	B_7:
+		GuiControl, Disable, B_7
+		GuiControl,PG_SL:, Name_7,
+		GuiControl, PG_SL:, Path_7,
+		Sleep, 50
+		GuiControl, Enable, B_7
+		return
+	B_8:
+		GuiControl, Disable, B_8
+		GuiControl,PG_SL:, Name_8,
+		GuiControl, PG_SL:, Path_8,
+		Sleep, 50
+		GuiControl, Enable, B_8
+		return
+	B_9:
+		GuiControl, Disable, B_9
+		GuiControl,PG_SL:, Name_9,
+		GuiControl, PG_SL:, Path_9,
+		Sleep, 50
+		GuiControl, Enable, B_9
+		return
+	B_10:
+		GuiControl, Disable, B_10
+		GuiControl,PG_SL:, Name_10,
+		GuiControl, PG_SL:, Path_10,
+		Sleep, 50
+		GuiControl, Enable, B_10
+		return
+	;Check Button
+	Ch_1:
+		Gui,PG_SL:Submit,nohide
+		GuiControl, Disable, Ch_1
+		IniWrite,%Path_1%,Path\temp.ini,Path,Path_1
+		IniRead,ch1,Path\temp.ini,Path,Path_1
+		Run, %ch1%, ,UseErrorLevel
+		if ErrorLevel
+		{
+			msgbox, It cannot work.
+		}
+		Sleep, 50
+		GuiControl, Enable, Ch_1
+		return
+	Ch_2:
+		Gui,PG_SL:Submit,nohide
+		GuiControl, Disable, Ch_2
+		IniWrite,%Path_2%,Path\temp.ini,Path,Path_2
+		IniRead,ch2,Path\temp.ini,Path,Path_2
+		Run, %ch2%, ,UseErrorLevel
+		if ErrorLevel
+		{
+			msgbox,It cannot work.
+		}
+		Sleep, 50
+		GuiControl, Enable, Ch_2
+		return
+	Ch_3:
+		Gui,PG_SL:Submit,nohide
+		GuiControl, Disable, Ch_3
+		IniWrite,%Path_3%,Path\temp.ini,Path,Path_3
+		IniRead,ch3,Path\temp.ini,Path,Path_3
+		Run, %ch3%, ,UseErrorLevel
+		if ErrorLevel
+		{
+			msgbox,It cannot work.
+		}
+		Sleep, 50
+		GuiControl, Enable, Ch_3
+		return
+	Ch_4:
+		Gui,PG_SL:Submit,nohide
+		GuiControl, Disable, Ch_4
+		IniWrite,%Path_4%,Path\temp.ini,Path,Path_4
+		IniRead,ch4,Path\temp.ini,Path,Path_4
+		Run, %ch4%, ,UseErrorLevel
+		if ErrorLevel
+		{
+			msgbox,It cannot work.
+		}
+		Sleep, 50
+		GuiControl, Enable, Ch_4
+		return
+	Ch_5:
+		Gui,PG_SL:Submit,nohide
+		GuiControl, Disable, Ch_5
+		IniWrite,%Path_5%,Path\temp.ini,Path,Path_5
+		IniRead,ch5,Path\temp.ini,Path,Path_5
+		Run, %ch5%, ,UseErrorLevel
+		if ErrorLevel
+		{
+			msgbox,It cannot work.
+		}
+		Sleep, 50
+		GuiControl, Enable, Ch_5
+		return
+	Ch_6:
+		Gui,PG_SL:Submit,nohide
+		GuiControl, Disable, Ch_6
+		IniWrite,%Path_6%,Path\temp.ini,Path,Path_6
+		IniRead,ch6,Path\temp.ini,Path,Path_6
+		Run, %ch6%, ,UseErrorLevel
+		if ErrorLevel
+		{
+			msgbox,It cannot work.
+		}
+		Sleep, 50
+		GuiControl, Enable, Ch_6
+		return
+	Ch_7:
+		Gui,PG_SL:Submit,nohide
+		GuiControl, Disable, Ch_7
+		IniWrite,%Path_7%,Path\temp.ini,Path,Path_7
+		IniRead,ch7,Path\temp.ini,Path,Path_7
+		Run, %ch7%, ,UseErrorLevel
+		if ErrorLevel
+		{
+			msgbox,It cannot work.
+		}
+		Sleep, 50
+		GuiControl, Enable, Ch_7
+		return
+	Ch_8:
+		Gui,PG_SL:Submit,nohide
+		GuiControl, Disable, Ch_8
+		IniWrite,%Path_8%,Path\temp.ini,Path,Path_8
+		IniRead,ch8,Path\temp.ini,Path,Path_8
+		Run, %ch8%, ,UseErrorLevel
+		if ErrorLevel
+		{
+			msgbox,It cannot work.
+		}
+		Sleep, 50
+		GuiControl, Enable, Ch_8
+		return
+	Ch_9:
+		Gui,PG_SL:Submit,nohide
+		GuiControl, Disable, Ch_9
+		IniWrite,%Path_9%,Path\temp.ini,Path,Path_9
+		IniRead,ch9,Path\temp.ini,Path,Path_9
+		Run, %ch9%, ,UseErrorLevel
+		if ErrorLevel
+		{
+			msgbox,It cannot work.
+		}
+		Sleep, 50
+		GuiControl, Enable, Ch_9
+		return
+	Ch_10:
+		Gui,PG_SL:Submit,nohide
+		GuiControl, Disable, Ch_10
+		IniWrite,%Path_10%,Path\temp.ini,Path,Path_10
+		IniRead,ch10,Path\temp.ini,Path,Path_10
+		Run, %ch10%, ,UseErrorLevel
+		if ErrorLevel
+		{
+			msgbox,It cannot work.
+		}
+		Sleep, 50
+		GuiControl, Enable, Ch_10
+		return
+reset_button:
+	GuiControl, Disable, cancel_var
+	Msgbox,4,Reset All, Are you sure to reset all?
+	ifMsgbox Yes
+	{
+		counter := 0
+		Loop, 20
+		{
+			counter++
+			GuiControl, ,Name_%counter%, 
+			GuiControl, ,Path_%counter%, 
+		}
+		Sleep, 50
+	}
+	GuiControl, Enable, cancel_var
 	return
-
-;----------------------------------------   tooltip_cancel
-/*
-	tooltip,,,, number
-*/
-;==============================
-can_tool:
-	tooltip
+call_reload:
+	Reload
 	return
-can_tool1:
-	tooltip,,,,1
+call_gui_ps:
+	gui, PG_SL:Destroy
+	gosub call_Select_Program_Gui
 	return
-can_tool2:
-	tooltip,,,,2
-	return
-can_tool3:
-	tooltip,,,,3
-	return
-can_tool4:
-	tooltip,,,,4
-	return
-can_tool5:
+can_tool_5: ;cancel tooltip 5
 	tooltip,,,,5
 	return
-can_tool6:
+can_tool_6:
 	tooltip,,,,6
 	return
-can_tool7:
-	tooltip,,,,7
+
+MouseKey_WU:
+	LAlt & WheelUp::
+		if(mu==null)
+			mu:=1
+		WN--
+		mu := mod(WN,10)+1
+		IniRead,Name_%mu%,Path\path.ini,Name,Name_%mu%
+		IniRead,Path_%mu%,Path\path.ini,Path,Path_%mu%
+		if(Path_%mu%==null)
+		{
+			loop 10
+			{
+				WN--
+				mu :=mod(WN,10)+1
+				IniRead,check_path_null,Path\path.ini,Path,Path_%mu%
+				if(check_path_null!=null)
+					break
+			}
+		}
+		IniRead,Name_tooltip_show,Path\path.ini,Name,Name_%mu%
+		IniRead,Path_tooltip_check,Path\path.ini,Path,Path_%mu%
+		if(Name_tooltip_show==null && Path_tooltip_check!=null)
+			tooltip,Null_%mu%,,,5
+		else if(Name_tooltip_show!=null)
+			tooltip,%Name_tooltip_show%,,,5
+		SetTimer, can_tool5, -2000
+
+		/*
+		WN :=WN-2
+		WN_plus_null_programe :=0
+		WN_minus_null_programe :=1
+		Sleep,100
+		goto Program_Select
+		*/
+		return
+MouseKey_WD:
+	LAlt & WheelDown::
+		if(mu==null)
+			mu:=1
+		WN++
+		mu := mod(WN,10)+1
+		IniRead,Name_%mu%,Path\path.ini,Name,Name_%mu%
+		IniRead,Path_%mu%,Path\path.ini,Path,Path_%mu%
+		if(Path_%mu%==null)
+		{
+			loop 10
+			{
+				WN++
+				mu :=mod(WN,10)+1
+				IniRead,check_path_null,Path\path.ini,Path,Path_%mu%
+				if(check_path_null!=null)
+					break
+			}
+		}
+		IniRead,Name_tooltip_show,Path\path.ini,Name,Name_%mu%
+		IniRead,Path_tooltip_check,Path\path.ini,Path,Path_%mu%
+		if(Name_tooltip_show==null && Path_tooltip_check!=null)
+			tooltip,Null_%mu%,,,5
+		else if(Name_tooltip_show!=null)
+			tooltip,%Name_tooltip_show%,,,5
+		SetTimer, can_tool5, -2000
+
+
+/*
+		WN :=WN+2
+		WN_minus_null_programe :=0
+		WN_plus_null_programe :=1
+		Sleep,100
+		goto Program_Select
+*/
+		return
+MouseKey_ST:
+	LAlt & RButton::
+		if(mu==null)
+		{
+			mu :=1
+		}
+		multi_select := 1 ;if you push alt multiselect program, it will open last one.
+		SetTimer, Openfile_set_program, -100
+		Tooltip,OK`nIt will open the last one`, you have chosen.,,,6
+		SetTimer, can_tool_6, -1000
+		return
+
+Openfile_set_program:
+	;Open_program := mu+1
+	IniRead, RL_Program, Path\path.ini,Path,Path_%mu%
+	multi_select := !multi_select
+	Loop
+	{
+		if(GetKeyState("Alt","P")!=1 || GetKeyState("tab","P")!=1)
+		{
+			PostMessage, 0x50, 0, 0x4090409,, A ;英文輸入
+		
+			try{
+				;;;;;;;;;;;;;;;;;;;;;
+				; check directory
+				gosub, check_directory_
+				;if(count_environment0==0)
+					;return
+				;;;;;;;;;;;;;;;;;;;;;
+			}
+
+			Run, %RL_Program%, % Explorer_GetSelection() , UseErrorLevel
+			if ErrorLevel
+			{
+				msgbox, It cannot work.
+			}
+
+
+
+			try{
+				;;;;;;;;;;;;;;;;;;;;;
+				; delete new directory
+				gosub, delete_temp_new_diretory
+				;;;;;;;;;;;;;;;;;;;;;
+			}
+
+
+
+			WN :=9999
+			break
+		}
+		else if(multi_select==1)
+		{
+			break
+		}
+	}
+	gosub, can_tool
 	return
-can_tool_8:
-can_tool8:
-	tooltip,,,,8
+;============== Program Select ==============
+;============================================
+
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+;@@@@@@@@@@@@@@ get title 1 @@@@@@@@@@@@@@@
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+getTitleParameter:
+	CoordMode, tooltip, screen
+	DetectHiddenText, On
+	getTitleIndex := 0
+	getTitle_switch := 0
+	markWindowShow := ""
+	;delete "default" section
+	besidesSection := 2
+	
+	if !FileExist("getTitle"){
+		FileCreateDir, getTitle	
+	}
+	if !FileExist("getTitle\mark.ini"){
+		markFile := FileOpen("getTitle\mark.ini","a")
+		markFile.write("[DEFAULT]`ndefaultIndex=1`n[SelectName]`n[MARK1]")
+		markFile.close
+		IniRead, defaultMARK, getTitle\mark.ini, DEFAULT, defaultIndex
+		;counting key number in section
+		IniRead, MARK, getTitle\mark.ini, MARK1
+		StringSplit, markKeyCount, MARK, `n
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		getTitleIndex := markKeyCount0
+		loop, %markKeyCount0%
+		{
+			IniRead, markWindowArray%A_Index%, getTitle\mark.ini, MARK1, mark%A_Index%
+			markWindowShow := % markWindowShow .  markWindowArray%A_Index% . "`n"
+		}
+	}
+	else{
+		IniRead, defaultMARK, getTitle\mark.ini, DEFAULT, defaultIndex
+		;counting key number in section
+		IniRead, MARK, getTitle\mark.ini, MARK%defaultMARK%
+		StringSplit, markKeyCount, MARK, `n
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		getTitleIndex := markKeyCount0
+		loop, %markKeyCount0%
+		{
+			IniRead, markWindowArray%A_Index%, getTitle\mark.ini, MARK%defaultMARK%, mark%A_Index%
+			markWindowShow := % markWindowShow .  markWindowArray%A_Index% . "`n"
+		}
+	}
+;--------------------   Add Tray
+	Menu, Tray, add
+	Menu, Tray, add, getTitle 1, openMarkWindow
+
+
+
+
 	return
-can_tool9:
-	tooltip,,,,9
+;@@@@@@@@@@
+
+
+/*
+lshift & wheelup::
 	return
-can_tool10:
-	tooltip,,,,10
+lshift & wheeldown::
 	return
-can_tool11:
-	tooltip,,,,11
+*/
+lshift & esc::
+	gosub, checkNewSection
+	getTitleIndex += 1
+	WinGetTitle,  markWindowArray%getTitleIndex%, A
+	loop % getTitleIndex-1
+	{
+		if( markWindowArray%A_Index%== markWindowArray%getTitleIndex%){
+			getTitleIndex -= 1
+			tooltip, Haved marked,A_ScreenWidth/2, A_ScreenHeight/8,
+			KeyWait, esc
+			tooltip, %markWindowShow%`n,0,0
+			return
+		}
+	}
+	markWindowShow := % markWindowShow .  markWindowArray%getTitleIndex% . "`n"
+	tooltip, %markWindowShow%`n,0,0
+	;write in file
+	IniWrite, % markWindowArray%getTitleIndex%, getTitle\mark.ini, MARK%defaultMARK%, mark%getTitleIndex%
+	;;;;;;;;;;;;;;
+	KeyWait, esc
+	KeyWait, lshift
+	settimer,markWindowcan_tool, -10000 
 	return
-can_tool12:
-	tooltip,,,,12
+tab & sc039::
+sc039 & 0::
+lshift & capslock:: 
+	tooltip
+	;getTitle_switch := !getTitle_switch
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	/*
+		-1: The window is minimized 
+		1: The window is maximized
+		0: The window is neither minimized nor maximized.
+	*/
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	WinGet, check_win_min, MinMax, % markWindowArray%getTitleIndex%
+	if(check_win_min==-1){
+		getTitle_switch := 1
+	}
+	else{
+		getTitle_switch := 0
+		the_last_one := % markWindowArray%getTitleIndex%
+		if !WinActive(the_last_one){
+			getTitle_switch := 1
+		}
+	}
+	if(getTitle_switch==1)
+	{
+		tooltip, Show window,A_ScreenWidth/2, A_ScreenHeight/8, 3
+		countOpenFile := 0
+		loop %getTitleIndex%{
+			if WinExist(markWindowArray%A_Index%){
+				Winactive( markWindowArray%A_Index%)
+				WinRestore, %  markWindowArray%A_Index%
+				WinActivate,% markWindowArray%A_Index%
+				countOpenFile += 1
+				tooltip, [%countOpenFile%/%getTitleIndex%],A_ScreenWidth/2, A_ScreenHeight/8,
+			}
+				tooltip, [%countOpenFile%/%getTitleIndex%],A_ScreenWidth/2, A_ScreenHeight/8,
+		}
+		WinSet, AlwaysOnTop, On, %  markWindowArray%getTitleIndex%
+		WinSet, AlwaysOnTop, Off, %  markWindowArray%getTitleIndex%
+		settimer,markWindowcan_tool, -5000 
+	}
+	else{
+		tooltip, Minimize window,A_ScreenWidth/2, A_ScreenHeight/8,3
+		loop %getTitleIndex%{
+			if WinExist( markWindowArray%A_Index%){
+				Winactive( markWindowArray%A_Index%)
+				;Minimize
+				WinMinimize, %  markWindowArray%A_Index%
+				;;;;;;;;;;;;;;;;;;;; WinActivate may break
+				;WinSet, Bottom,, %  markWindowArray%A_Index%
+				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			}
+		}
+	}
+	settimer, markWindowcan_tool, -1000
+	KeyWait, tab
 	return
-can_tool13:
-	tooltip,,,,13
+openMarkWindow:
+lshift & tab::
+	try{
+		; use to close exist "mark" window
+		Gui, markwindow:Add, Button,vmark_var_top, "to check window exist"
+	}
+	catch{
+		Gui, markwindow:destroy
+		return
+	}
+	;check all window close
+	gosub, destroyAllWindow
+	Gui, markwindow:New
+	gosub, countSectionNumber
+	if(MARKCount0>=defaultMARK)
+	{
+		IniRead, mark1, getTitle\mark.ini, MARK1, mark1
+		if(mark1!="ERROR"){
+			Gui, markwindow:Add, Edit, w100 vSelectName%defaultMARK% gnamingSelect,
+		}
+	}
+	tooltip
+	;guicontrol to show Select Name
+	loop %MARKCount0%
+	{
+		IniRead, SelectName%A_Index%, getTitle\mark.ini, SelectName, name%A_Index%
+	}
+	if(SelectName%defaultMARK%!="ERROR")
+	{
+		guicontrol, text, SelectName%defaultMARK%, % SelectName%defaultMARK%
+	}
+	loop %getTitleIndex%
+	{
+		if(A_Index==getTitleIndex){
+			Gui, markwindow:Add, Radio, y+10 vMarkWindow%A_Index% Checked, %  markWindowArray%A_Index%
+		}
+		else{
+			Gui, markwindow:Add, Radio, y+10  vMarkWindow%A_Index% , %  markWindowArray%A_Index%
+		}
+	}
+	Gui, markwindow:Add, Button, Default w40 h30 gmarkwindowSelectAdd, &Add
+	Gui, markwindow:Add, Button, Default w40 h30 x+5 gmarkWindowEdi, &Edit
+	Gui, markwindow:Add, Button, Default w40 h30 x+5 gmarkWindowSelect, &Select
+	Gui, markwindow:Add, Button, Default w40 h30 x+5 gmarkWindowDelWindow, &Del
+	Gui, markwindow:Add, Button, Default w40 h30 x+5 vmark_var_top gmarkWindowTop, &Top
+	Gui, markwindow:+AlwaysOnTop
+	Gui, markwindow:show
+	KeyWait, capslock
 	return
-can_tool14:
-	tooltip,,,,14
+lshift & rbutton::
+	markWindowShow_ := ""
+	loop %getTitleIndex%
+	{
+		markWindowShow_ := % markWindowShow_ .  markWindowArray%A_Index% . "`n"
+	}
+	tooltip, %markWindowShow_%,A_ScreenWidth/2, A_ScreenHeight/8,2
+	;tooltip, %markWindowShow_%,,,2
+	KeyWait, lshift
+	tooltip,,,,2
 	return
-can_tool15:
-	tooltip,,,,15
-	return
-can_tool16:
-	tooltip,,,,16
-	return
-can_tool17:
-	tooltip,,,,17
-	return
-can_tool18:
-	tooltip,,,,18
-	return
-can_tool19:
-	tooltip,,,,19
-	return
-can_tool20:
-	tooltip,,,,20
-	return
-ca_tool:
+
+
+
+
+markWindowcan_tool:
+	tooltip, ,A_ScreenWidth/2, A_ScreenHeight/2,3
 	tooltip
 	return
-;============== Tooltip ===============
-;======================================
+
+markWindowTop:
+	Gui, markwindow:Submit
+	;GuiControl, markwindow:focus, mark_var_top
+	
+	loop %getTitleIndex%
+	{
+		if(MarkWindow%A_Index%==1){
+			markIndex := A_Index
+			;change value
+			temp := %  markWindowArray%A_Index%
+			markWindowArray%markIndex% := %  markWindowArray%getTitleIndex%
+			markWindowArray%getTitleIndex% := temp
+			; write in ini
+			IniWrite, % markWindowArray%getTitleIndex%, getTitle\mark.ini, MARK%defaultMARK%, mark%getTitleIndex%
+			IniWrite, % markWindowArray%markIndex%, getTitle\mark.ini, MARK%defaultMARK%, mark%markIndex%
+			;;;;;;;;;;;;;;
+			break
+		}
+	}
+	gosub, resetmarkWindowShow
+	Gui, markwindow:Destroy
+	return
+markWindowDelWindow:
+	Gui, markwindow:Submit
+	Gui, markwindow:Destroy
+	Gui, markwindowDel:Destroy
+	loop %getTitleIndex%
+	{
+		Gui, markwindowDel:Add, CheckBox, vDelArrayContent%A_Index%, % markWindowArray%A_Index%
+	}
+	Gui, markwindowDel:Add, Button, w40 h30 gmarkWindowDelOK, Delete
+	Gui, markwindowDel:Add, Button, w70 h30 x+15 gmarkWindowDelAll, Select All
+	Gui, markwindowDel:+AlwaysOnTop
+	Gui, markwindowDel:show
+	return
+markWindowDelAll:
+	loop %getTitleIndex%
+	{
+		GuiControl,, DelArrayContent%A_Index%, 1
+	}
+	return
+markWindowDelOK:
+	Gui, markwindowDel:Submit
+	gosub, markWindowDelOKFunction
+	gosub, openMarkWindow
+	return
+markWindowDelOKFunction:
+	nullCount := 0
+	;checked choice assigned to null.
+	loop %getTitleIndex%
+	{
+		if(DelArrayContent%A_Index%==1){
+			markWindowArray%A_Index% := null
+			nullCount += 1
+		}
+	}
+	temp_index := 0
+	loop %getTitleIndex%
+	{
+		
+		if(markWindowArray%A_Index%!=null){
+			temp_index += 1
+			temp%temp_index% := % markWindowArray%A_Index%
+		}
+	}
+	getTitleIndex -= nullCount
+	loop %getTitleIndex%
+	{
+		markWindowArray%A_Index% := % temp%A_Index%
+		IniWrite, % markWindowArray%A_Index%, getTitle\mark.ini, MARK%defaultMARK%, mark%A_Index%
+	}
+	loop %nullCount%
+	{
+		temp_del := getTitleIndex + A_Index
+		IniDelete, getTitle\mark.ini, MARK%defaultMARK%, mark%temp_del%
+	}
+	nullCount := null
+	temp_del := null
+	temp_index := null
+	;if section content all delete, change last section to this section
+	if(getTitleIndex == 0)
+	{
+		gosub, countSectionNumber
+	
+		;if delete last section
+		if(defaultMARK==MARKCount0){
+			MARKCount0 -= 1
+			IniRead, MARK, getTitle\mark.ini, MARK%MARKCount0%
+			StringSplit, markKeyCount, MARK, `n
+			loop %markKeyCount0%
+			{
+				IniRead, markWindowArray%A_Index%, getTitle\mark.ini, MARK%MARKCount0%, mark%A_Index%
+				
+			}
+
+			defaultMARK -=1
+			if(defaultMARK==0){
+				defaultMARK :=1
+			}
+			gosub, writeInIniDefaultSection
+			lastSectionDelete_temp := defaultMARK +1
+
+			IniDelete, getTitle\mark.ini, MARK%lastSectionDelete_temp%
+			IniDelete, getTitle\mark.ini, SelectName, name%lastSectionDelete_temp%
+		}
+		else{
+			;counting key number in section
+			IniRead, MARK, getTitle\mark.ini, MARK%MARKCount0%
+			StringSplit, markKeyCount, MARK, `n
+			loop %markKeyCount0%
+			{
+				IniRead, markWindowArray%A_Index%, getTitle\mark.ini, MARK%MARKCount0%, mark%A_Index%
+				IniWrite, % markWindowArray%A_Index%, getTitle\mark.ini,MARK%defaultMARK%, mark%A_Index%
+			}
+			IniDelete, getTitle\mark.ini, MARK%MARKCount0%
+			;write last name to the delete one
+			IniRead, temp_SelectName, getTitle\mark.ini, SelectName, name%MARKCount0%
+			IniDelete, getTitle\mark.ini, SelectName, name%MARKCount0%
+			IniWrite, %temp_SelectName%, getTitle\mark.ini,  SelectName, name%defaultMARK%
+		}
+		if(MARKCount0==0){
+			markFile := FileOpen("getTitle\mark.ini","w")
+			markFile.write("[DEFAULT]`ndefaultIndex=1`n[SelectName]`n[MARK1]")
+			markFile.close
+		}
+		gosub,countSectionNumber
+
+		getTitleIndex := markKeyCount0
+	}
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	gosub, resetmarkWindowShow
+	return
+markWindowEdi:
+	Gui, markwindow:Submit
+	Gui, markwindow:destroy
+	Gui, markwindowEdit:New
+	loop %getTitleIndex%
+	{
+		Gui, markwindowEdit:Add, Edit, vEditArrayContent%A_Index%, %  markWindowArray%A_Index%
+	}
+	Gui, markwindowEdit:Add, Button, Default gmarkWindowEditOK, OK
+	Gui, markwindowEdit:+AlwaysOnTop
+	Gui, markwindowEdit:show
+	return
+markWindowEditOK:
+	Gui, markwindowEdit:Submit
+	loop %getTitleIndex%
+	{
+		markWindowArray%A_Index% := % EditArrayContent%A_Index%
+		IniWrite, % markWindowArray%A_Index%, getTitle\mark.ini, MARK%defaultMARK%, mark%A_Index%
+	}
+	gosub, resetmarkWindowShow
+	gosub, openMarkWindow
+	return
+markWindowSelect:
+	Gui, markwindow:Destroy
+	Gui, markwindowSelect:New
+	gosub, countSectionNumber
+	loop %MARKCount0%
+	{
+		IniRead, SelectName%A_Index%, getTitle\mark.ini, SelectName, name%A_Index%
+		Gui, markwindowSelect:Add, Radio, vMARKSECTION%A_Index% gshowMARKSECTIONCONTENT, Select%A_Index% 
+		if(SelectName%A_Index%!="ERROR"){
+			GuiControl, text, MARKSECTION%A_Index%, % SelectName%A_Index%
+		}
+	}
+	Gui, markwindowSelect:Add, Button, Default w40 h30 vmarkwindowSelectOKButton gmarkwindowSelectOK, OK
+	GuiControl, Disable, markwindowSelectOKButton
+	Gui, markwindowSelect:Add, Button, Default w40 h30 x+20 gmarkwindowSelectAdd, Add
+	Gui, markwindowSelect:+AlwaysOnTop
+	Gui, markwindowSelect:show
+	return
+markwindowSelectAdd:
+	gosub, countSectionNumber
+	defaultMARK := MARKCount0 + 1
+	gosub, writeInIniDefaultSection
+	gosub, createBlankSection
+	gosub, resetmarkWindowShow
+	gosub, readIniSectionMark
+	gosub, markwindowSelectAddCloseTooltip
+	Gui, markwindowSelect:destroy
+	Gui, markwindow:destroy
+	return
+
+markwindowSelectOK:
+	Gui, markwindowSelect:submit
+	defaultMARK := MARKSECTION_temp_index
+	gosub, writeInIniDefaultSection
+	getTitleIndex := markKeyCount0
+	loop %getTitleIndex%
+	{
+		IniRead, markWindowArray%A_Index%, getTitle\mark.ini, MARK%defaultMARK%, mark%A_Index%
+		
+	}
+	; tooltip 4
+	SetTimer, markWindowShow_Gui_tooltip, off
+	tooltip,,,,4
+	;;;;;;;;;;;;
+	gosub, resetmarkWindowShow
+	gosub, openMarkWindow
+	return
+
+showMARKSECTIONCONTENT:
+	Gui, markwindowSelect:submit, nohide
+	GuiControl, Enable, markwindowSelectOKButton
+	loop %MARKCount0%
+	{
+		if(MARKSECTION%A_Index% == 1){
+			;counting key number in section
+			IniRead, MARK, getTitle\mark.ini, MARK%A_Index%
+			StringSplit, markKeyCount, MARK, `n
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			markWindowShow_Gui := ""
+			MARKSECTION_temp_index := A_Index
+			loop %markKeyCount0%
+			{
+				IniRead, mark%A_Index%, getTitle\mark.ini, MARK%MARKSECTION_temp_index%, mark%A_Index%
+				markWindowShow_Gui := % markWindowShow_Gui .  mark%A_Index% . "`n"
+			}
+		}
+	}
+	SetTimer, markWindowShow_Gui_tooltip, 50
+	return
+markwindowSelectGuiClose:
+markwindowSelectAddCloseTooltip:
+	SetTimer, markWindowShow_Gui_tooltip, off
+	tooltip,, , , 4 
+	Gui, markwindowSelect:destroy
+	return
+markWindowShow_Gui_tooltip:
+	;tooltip,%markWindowShow_Gui%,A_ScreenWidth/2, A_ScreenHeight/8, 4 
+	tooltip,%markWindowShow_Gui%,,, 4 
+	return
+resetmarkWindowShow:
+	markWindowShow := ""
+	loop %getTitleIndex%
+	{
+		markWindowShow := % markWindowShow .  markWindowArray%A_Index% . "`n"
+	}
+	return
+
+readIniSectionMark:
+	;counting key number in section
+	IniRead, MARK, getTitle\mark.ini, MARK%defaultMARK%
+	StringSplit, markKeyCount, MARK, `n
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	getTitleIndex := markKeyCount0
+	loop, %markKeyCount0%
+	{
+		IniRead, markWindowArray%A_Index%, getTitle\mark.ini, MARK%defaultMARK%, mark%A_Index%
+		markWindowShow := % markWindowShow .  markWindowArray%A_Index% . "`n"
+	}
+	gosub, resetmarkWindowShow
+	return
+
+
+/*
+wheelSwithSectionContent:
+	gosub, countSectionNumber
+	wheelCountSectionNumber := MARKCount0 +1
+	return
+*/
+countSectionNumber:
+	;count number of sections
+	IniRead, MARKSECTION, getTitle\mark.ini
+	StringSplit, MARKCount, MARKSECTION, `n
+	MARKCount0 -= besidesSection ;delete "default" section
+	return
+namingSelect:
+	Gui, markwindow:submit, nohide
+	;gosub, countSectionNumber
+	IniWrite, % SelectName%defaultMARK%, getTitle\mark.ini,SelectName, name%defaultMARK% 
+	return
+writeInIniDefaultSection:
+	IniWrite, %defaultMARK%, getTitle\mark.ini, DEFAULT, defaultIndex
+	return
+createBlankSection:
+	IniWrite, "", getTitle\mark.ini, MARK%defaultMARK%, mark1
+	return
+checkNewSection:
+	;count key number
+	IniRead, MARK, getTitle\mark.ini, MARK%defaultMARK%
+	StringSplit, markKeyCount, MARK, `n
+	if(markKeyCount0==1){
+		IniRead, mark1, getTitle\mark.ini, MARK%defaultMARK%, mark1
+		if(mark1==""){
+		IniDelete, getTitle\mark.ini, MARK%defaultMARK%, mark1
+		getTitleIndex := 0
+		}
+	}
+	gosub, resetmarkWindowShow
+	
+	return
+markwindowGuiClose:
+destroyAllWindow:
+	Gui, markwindow:Destroy
+	Gui, markwindowSelect:Destroy
+	Gui, markwindowDel:Destroy
+	Gui, markwindowEdit:Destroy
+	return
+;============== get title 1 ===============
+;==========================================
+
+
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+;@@@@@@@@@@@@@@ get title 2 @@@@@@@@@@@@@@@
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+getTitleParameter2:
+	CoordMode, tooltip, screen
+	DetectHiddenText, On
+	A2A := 0
+	A3A := 0
+	A4A := ""
+	;delete "default" section
+	A5A := 2
+	
+	if !FileExist("getTitle"){
+		FileCreateDir, getTitle	
+	}
+	if !FileExist("getTitle\mark2A.ini"){
+		mark2AFile := FileOpen("getTitle\mark2A.ini","a")
+		mark2AFile.write("[DEFAULT]`ndefaultIndex=1`n[A27A]`n[A7A1]")
+		mark2AFile.close
+		IniRead, A6A, getTitle\mark2A.ini, DEFAULT, defaultIndex
+		;counting key number in section
+		IniRead, A7A, getTitle\mark2A.ini, A7A1
+		StringSplit, mark2AKeyCount, A7A, `n
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		A2A := mark2AKeyCount0
+		loop, %mark2AKeyCount0%
+		{
+			IniRead, mark2AWindowArray%A_Index%, getTitle\mark2A.ini, A7A1, mark2A%A_Index%
+			A4A := % A4A .  mark2AWindowArray%A_Index% . "`n"
+		}
+	}
+	else{
+		IniRead, A6A, getTitle\mark2A.ini, DEFAULT, defaultIndex
+		;counting key number in section
+		IniRead, A7A, getTitle\mark2A.ini, A7A%A6A%
+		StringSplit, mark2AKeyCount, A7A, `n
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		A2A := mark2AKeyCount0
+		loop, %mark2AKeyCount0%
+		{
+			IniRead, mark2AWindowArray%A_Index%, getTitle\mark2A.ini, A7A%A6A%, mark2A%A_Index%
+			A4A := % A4A .  mark2AWindowArray%A_Index% . "`n"
+		}
+	}
+;--------------------   Add Tray
+	Menu, Tray, add, getTitle 2, A8A
+
+	return
+rshift & esc::
+	gosub, A11A
+	A2A += 1
+	WinGetTitle,  mark2AWindowArray%A2A%, A
+	loop % A2A-1
+	{
+		if( mark2AWindowArray%A_Index%== mark2AWindowArray%A2A%){
+			A2A -= 1
+			tooltip, Haved mark2Aed,A_ScreenWidth/2, A_ScreenHeight/8,
+			KeyWait, esc
+			tooltip, %A4A%`n,0,0
+			return
+		}
+	}
+	A4A := % A4A .  mark2AWindowArray%A2A% . "`n"
+	tooltip, %A4A%`n,0,0
+	;write in file
+	IniWrite, % mark2AWindowArray%A2A%, getTitle\mark2A.ini, A7A%A6A%, mark2A%A2A%
+	;;;;;;;;;;;;;;
+	KeyWait, esc
+	KeyWait, rshift
+	settimer,mark2AWindowcan_tool, -10000 
+	return
+capslock & sc039::
+rshift & capslock:: 
+	tooltip
+	;A3A := !A3A
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	/*
+		-1: The window is minimized 
+		1: The window is maximized
+		0: The window is neither minimized nor maximized.
+	*/
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	WinGet, A12A, MinMax, % mark2AWindowArray%A2A%
+	if(A12A==-1){
+		A3A := 1
+	}
+	else{
+		A3A := 0
+		A13 := % mark2AWindowArray%A2A%
+		if !WinActive(A13){
+			A3A := 1
+		}
+	}
+	if(A3A==1)
+	{
+		tooltip, Show window,A_ScreenWidth/2, A_ScreenHeight/8,3
+		A14A := 0
+		loop %A2A%{
+			if WinExist(mark2AWindowArray%A_Index%){
+				Winactive( mark2AWindowArray%A_Index%)
+				WinRestore, %  mark2AWindowArray%A_Index%
+				WinActivate,% mark2AWindowArray%A_Index%
+				A14A += 1
+				tooltip, [%A14A%/%A2A%],A_ScreenWidth/2, A_ScreenHeight/8,
+			}
+				tooltip, [%A14A%/%A2A%],A_ScreenWidth/2, A_ScreenHeight/8,
+		}
+		WinSet, AlwaysOnTop, On, %  mark2AWindowArray%A2A%
+		WinSet, AlwaysOnTop, Off, %  mark2AWindowArray%A2A%
+		settimer,mark2AWindowcan_tool, -5000 
+	}
+	else{
+		tooltip, Minimize window,A_ScreenWidth/2, A_ScreenHeight/8,3
+		loop %A2A%{
+			if WinExist( mark2AWindowArray%A_Index%){
+				Winactive( mark2AWindowArray%A_Index%)
+				;Minimize
+				WinMinimize, %  mark2AWindowArray%A_Index%
+				;;;;;;;;;;;;;;;;;;;; WinActivate may break
+				;WinSet, Bottom,, %  mark2AWindowArray%A_Index%
+				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			}
+		}
+	}
+	settimer, mark2AWindowcan_tool, -1000
+	KeyWait, tab
+	return
+A8A:
+rshift & tab::
+	try{
+		; use to close exist "mark2A" window
+		Gui, mark2Awindow:Add, Button,vmark2A_var_top, "to check window exist"
+	}
+	catch{
+		Gui, mark2Awindow:destroy
+		return
+	}
+	;check all window close
+	gosub, A15A
+	Gui, mark2Awindow:New
+	gosub, A16A
+	if(A7ACount0>=A6A)
+	{
+		IniRead, mark2A1, getTitle\mark2A.ini, A7A1, mark2A1
+		if(mark2A1!="ERROR"){
+			Gui, mark2Awindow:Add, Edit, w100 vA27A%A6A% gA17A,
+		}
+	}
+	tooltip
+	;guicontrol to show Select Name
+	loop %A7ACount0%
+	{
+		IniRead, A27A%A_Index%, getTitle\mark2A.ini, A27A, A28A%A_Index%
+	}
+	if(A27A%A6A%!="ERROR")
+	{
+		guicontrol, text, A27A%A6A%, % A27A%A6A%
+	}
+	loop %A2A%
+	{
+		if(A_Index==A2A){
+			Gui, mark2Awindow:Add, Radio, y+10 vA33A%A_Index% Checked, %  mark2AWindowArray%A_Index%
+		}
+		else{
+			Gui, mark2Awindow:Add, Radio, y+10  vA33A%A_Index% , %  mark2AWindowArray%A_Index%
+		}
+	}
+	Gui, mark2Awindow:Add, Button, Default w40 h30 gmark2AwindowSelectAdd, &Add
+	Gui, mark2Awindow:Add, Button, Default w40 h30 x+5 gmark2AWindowEdi, &Edit
+	Gui, mark2Awindow:Add, Button, Default w40 h30 x+5 gmark2AWindowSelect, &Select
+	Gui, mark2Awindow:Add, Button, Default w40 h30 x+5 gmark2AWindowDelWindow, &Del
+	Gui, mark2Awindow:Add, Button, Default w40 h30 x+5 vmark2A_var_top gmark2AWindowTop, &Top
+	Gui, mark2Awindow:+AlwaysOnTop
+	Gui, mark2Awindow:show
+	KeyWait, capslock
+	return
+rshift & rbutton::
+	A4A_ := ""
+	loop %A2A%
+	{
+		A4A_ := % A4A_ .  mark2AWindowArray%A_Index% . "`n"
+	}
+	tooltip, %A4A_%,A_ScreenWidth/2, A_ScreenHeight/8,2
+	KeyWait, rshift
+	tooltip,,,,2
+	return
+
+
+
+
+mark2AWindowcan_tool:
+	tooltip, ,,,3
+	tooltip
+	return
+
+mark2AWindowTop:
+	Gui, mark2Awindow:Submit
+	;GuiControl, mark2Awindow:focus, mark2A_var_top
+	
+	loop %A2A%
+	{
+		if(A33A%A_Index%==1){
+			mark2AIndex := A_Index
+			;change value
+			A31A := %  mark2AWindowArray%A_Index%
+			mark2AWindowArray%mark2AIndex% := %  mark2AWindowArray%A2A%
+			mark2AWindowArray%A2A% := A31A
+			; write in ini
+			IniWrite, % mark2AWindowArray%A2A%, getTitle\mark2A.ini, A7A%A6A%, mark2A%A2A%
+			IniWrite, % mark2AWindowArray%mark2AIndex%, getTitle\mark2A.ini, A7A%A6A%, mark2A%mark2AIndex%
+			;;;;;;;;;;;;;;
+			break
+		}
+	}
+	gosub, resetA4A
+	Gui, mark2Awindow:Destroy
+	return
+mark2AWindowDelWindow:
+	Gui, mark2Awindow:Submit
+	Gui, mark2Awindow:Destroy
+	Gui, mark2AwindowDel:Destroy
+	loop %A2A%
+	{
+		Gui, mark2AwindowDel:Add, CheckBox, vA18A%A_Index%, % mark2AWindowArray%A_Index%
+	}
+	Gui, mark2AwindowDel:Add, Button, w40 h30 gmark2AWindowDelOK, Delete
+	Gui, mark2AwindowDel:Add, Button, w70 h30 x+15 gmark2AWindowDelAll, Select All
+	Gui, mark2AwindowDel:+AlwaysOnTop
+	Gui, mark2AwindowDel:show
+	return
+mark2AWindowDelAll:
+	loop %A2A%
+	{
+		GuiControl,, A18A%A_Index%, 1
+	}
+	return
+mark2AWindowDelOK:
+	Gui, mark2AwindowDel:Submit
+	gosub, mark2AWindowDelOKFunction
+	gosub, A8A
+	return
+mark2AWindowDelOKFunction:
+	A20A := 0
+	;checked choice assigned to null.
+	loop %A2A%
+	{
+		if(A18A%A_Index%==1){
+			mark2AWindowArray%A_Index% := null
+			A20A += 1
+		}
+	}
+	A21A := 0
+	loop %A2A%
+	{
+		
+		if(mark2AWindowArray%A_Index%!=null){
+			A21A += 1
+			A31A%A21A% := % mark2AWindowArray%A_Index%
+		}
+	}
+	A2A -= A20A
+	loop %A2A%
+	{
+		mark2AWindowArray%A_Index% := % A31A%A_Index%
+		IniWrite, % mark2AWindowArray%A_Index%, getTitle\mark2A.ini, A7A%A6A%, mark2A%A_Index%
+	}
+	loop %A20A%
+	{
+		A22A := A2A + A_Index
+		IniDelete, getTitle\mark2A.ini, A7A%A6A%, mark2A%A22A%
+	}
+	A20A := null
+	A22A := null
+	A21A := null
+	;if section content all delete, change last section to this section
+	if(A2A == 0)
+	{
+		gosub, A16A
+	
+		;if delete last section
+		if(A6A==A7ACount0){
+			A7ACount0 -= 1
+			IniRead, A7A, getTitle\mark2A.ini, A7A%A7ACount0%
+			StringSplit, mark2AKeyCount, A7A, `n
+			loop %mark2AKeyCount0%
+			{
+				IniRead, mark2AWindowArray%A_Index%, getTitle\mark2A.ini, A7A%A7ACount0%, mark2A%A_Index%
+				
+			}
+
+			A6A -=1
+			if(A6A==0){
+				A6A :=1
+			}
+			gosub, A23A
+			A24A := A6A +1
+
+			IniDelete, getTitle\mark2A.ini, A7A%A24A%
+			IniDelete, getTitle\mark2A.ini, A27A, A28A%A24A%
+		}
+		else{
+			;counting key number in section
+			IniRead, A7A, getTitle\mark2A.ini, A7A%A7ACount0%
+			StringSplit, mark2AKeyCount, A7A, `n
+			loop %mark2AKeyCount0%
+			{
+				IniRead, mark2AWindowArray%A_Index%, getTitle\mark2A.ini, A7A%A7ACount0%, mark2A%A_Index%
+				IniWrite, % mark2AWindowArray%A_Index%, getTitle\mark2A.ini,A7A%A6A%, mark2A%A_Index%
+			}
+			IniDelete, getTitle\mark2A.ini, A7A%A7ACount0%
+			;write last A28A to the delete one
+			IniRead, A25A, getTitle\mark2A.ini, A27A, A28A%A7ACount0%
+			IniDelete, getTitle\mark2A.ini, A27A, A28A%A7ACount0%
+			IniWrite, %A25A%, getTitle\mark2A.ini,  A27A, A28A%A6A%
+		}
+		if(A7ACount0==0){
+			mark2AFile := FileOpen("getTitle\mark2A.ini","w")
+			mark2AFile.write("[DEFAULT]`ndefaultIndex=1`n[A27A]`n[A7A1]")
+			mark2AFile.close
+		}
+		gosub,A16A
+
+		A2A := mark2AKeyCount0
+	}
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	gosub, resetA4A
+	return
+mark2AWindowEdi:
+	Gui, mark2Awindow:Submit
+	Gui, mark2Awindow:destroy
+	Gui, mark2AwindowEdit:New
+	loop %A2A%
+	{
+		Gui, mark2AwindowEdit:Add, Edit, vA26A%A_Index%, %  mark2AWindowArray%A_Index%
+	}
+	Gui, mark2AwindowEdit:Add, Button, Default gmark2AWindowEditOK, OK
+	Gui, mark2AwindowEdit:+AlwaysOnTop
+	Gui, mark2AwindowEdit:show
+	return
+mark2AWindowEditOK:
+	Gui, mark2AwindowEdit:Submit
+	loop %A2A%
+	{
+		mark2AWindowArray%A_Index% := % A26A%A_Index%
+		IniWrite, % mark2AWindowArray%A_Index%, getTitle\mark2A.ini, A7A%A6A%, mark2A%A_Index%
+	}
+	gosub, resetA4A
+	gosub, A8A
+	return
+mark2AWindowSelect:
+	Gui, mark2Awindow:Destroy
+	Gui, mark2AwindowSelect:New
+	gosub, A16A
+	loop %A7ACount0%
+	{
+		IniRead, A27A%A_Index%, getTitle\mark2A.ini, A27A, A28A%A_Index%
+		Gui, mark2AwindowSelect:Add, Radio, vA7ASECTION%A_Index% gshowA7ASECTIONCONTENT, Select%A_Index% 
+		if(A27A%A_Index%!="ERROR"){
+			GuiControl, text, A7ASECTION%A_Index%, % A27A%A_Index%
+		}
+	}
+	Gui, mark2AwindowSelect:Add, Button, Default w40 h30 vmark2AwindowSelectOKButton gmark2AwindowSelectOK, OK
+	GuiControl, Disable, mark2AwindowSelectOKButton
+	Gui, mark2AwindowSelect:Add, Button, Default w40 h30 x+20 gmark2AwindowSelectAdd, Add
+	Gui, mark2AwindowSelect:+AlwaysOnTop
+	Gui, mark2AwindowSelect:show
+	return
+mark2AwindowSelectAdd:
+	gosub, A16A
+	A6A := A7ACount0 + 1
+	gosub, A23A
+	gosub, A30
+	gosub, resetA4A
+	gosub, A10A
+	gosub, mark2AwindowSelectAddCloseTooltip
+	Gui, mark2AwindowSelect:destroy
+	Gui, mark2Awindow:destroy
+	return
+
+mark2AwindowSelectOK:
+	Gui, mark2AwindowSelect:submit
+	A6A := A7ASECTION_A21A
+	gosub, A23A
+	A2A := mark2AKeyCount0
+	loop %A2A%
+	{
+		IniRead, mark2AWindowArray%A_Index%, getTitle\mark2A.ini, A7A%A6A%, mark2A%A_Index%
+		
+	}
+	; tooltip 4
+	SetTimer, A4A_Gui_tooltip, off
+	tooltip,,,,4
+	;;;;;;;;;;;;
+	gosub, resetA4A
+	gosub, A8A
+	return
+
+showA7ASECTIONCONTENT:
+	Gui, mark2AwindowSelect:submit, nohide
+	GuiControl, Enable, mark2AwindowSelectOKButton
+	loop %A7ACount0%
+	{
+		if(A7ASECTION%A_Index% == 1){
+			;counting key number in section
+			IniRead, A7A, getTitle\mark2A.ini, A7A%A_Index%
+			StringSplit, mark2AKeyCount, A7A, `n
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			A4A_Gui := ""
+			A7ASECTION_A21A := A_Index
+			loop %mark2AKeyCount0%
+			{
+				IniRead, mark2A%A_Index%, getTitle\mark2A.ini, A7A%A7ASECTION_A21A%, mark2A%A_Index%
+				A4A_Gui := % A4A_Gui .  mark2A%A_Index% . "`n"
+			}
+		}
+	}
+	SetTimer, A4A_Gui_tooltip, 50
+	return
+mark2AwindowSelectGuiClose:
+mark2AwindowSelectAddCloseTooltip:
+	SetTimer, A4A_Gui_tooltip, off
+	tooltip,, , , 4 
+	Gui, mark2AwindowSelect:destroy
+	return
+A4A_Gui_tooltip:
+	;tooltip,%A4A_Gui%,A_ScreenWidth/2, A_ScreenHeight/8, 4 
+	tooltip,%A4A_Gui%,,, 4 
+	return
+resetA4A:
+	A4A := ""
+	loop %A2A%
+	{
+		A4A := % A4A .  mark2AWindowArray%A_Index% . "`n"
+	}
+	return
+
+A10A:
+	;counting key number in section
+	IniRead, A7A, getTitle\mark2A.ini, A7A%A6A%
+	StringSplit, mark2AKeyCount, A7A, `n
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	A2A := mark2AKeyCount0
+	loop, %mark2AKeyCount0%
+	{
+		IniRead, mark2AWindowArray%A_Index%, getTitle\mark2A.ini, A7A%A6A%, mark2A%A_Index%
+		A4A := % A4A .  mark2AWindowArray%A_Index% . "`n"
+	}
+	gosub, resetA4A
+	return
+
+
+/*
+wheelSwithSectionContent:
+	gosub, A16A
+	wheelCountSectionNumber := A7ACount0 +1
+	return
+*/
+A16A:
+	;count number of sections
+	IniRead, A7ASECTION, getTitle\mark2A.ini
+	StringSplit, A7ACount, A7ASECTION, `n
+	A7ACount0 -= A5A ;delete "default" section
+	return
+A17A:
+	Gui, mark2Awindow:submit, nohide
+	;gosub, A16A
+	IniWrite, % A27A%A6A%, getTitle\mark2A.ini,A27A, A28A%A6A% 
+	return
+A23A:
+	IniWrite, %A6A%, getTitle\mark2A.ini, DEFAULT, defaultIndex
+	return
+A30:
+	IniWrite, "", getTitle\mark2A.ini, A7A%A6A%, mark2A1
+	return
+A11A:
+	;count key number
+	IniRead, A7A, getTitle\mark2A.ini, A7A%A6A%
+	StringSplit, mark2AKeyCount, A7A, `n
+	if(mark2AKeyCount0==1){
+		IniRead, mark2A1, getTitle\mark2A.ini, A7A%A6A%, mark2A1
+		if(mark2A1==""){
+		IniDelete, getTitle\mark2A.ini, A7A%A6A%, mark2A1
+		A2A := 0
+		}
+	}
+	gosub, resetA4A
+	
+	return
+mark2AwindowGuiClose:
+A15A:
+	Gui, mark2Awindow:Destroy
+	Gui, mark2AwindowSelect:Destroy
+	Gui, mark2AwindowDel:Destroy
+	Gui, mark2AwindowEdit:Destroy
+	return
+;============== get title 2 ===============
+;==========================================
+
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+;@@@@@@@@@@@@@@ get title 3 @@@@@@@@@@@@@@@
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+;@@@@@@@@@@@@@@ Parameter @@@@@@@@@@@@@@@
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+getTitleParameter3:
+	CoordMode, tooltip, screen
+	DetectHiddenText, On
+	B2B := 0
+	B3B := 0
+	B4B := ""
+	;delete "default" section
+	B5B := 2
+	
+	if !FileExist("getTitle"){
+		FileCreateDir, getTitle	
+	}
+	if !FileExist("getTitle\markB2B.ini"){
+		markB2BFile := FileOpen("getTitle\markB2B.ini","a")
+		markB2BFile.write("[DEFAULT]`ndefaultIndex=1`n[B27B]`n[B7B1]")
+		markB2BFile.close
+		IniRead, B6B, getTitle\markB2B.ini, DEFAULT, defaultIndex
+		;counting key number in section
+		IniRead, B7B, getTitle\markB2B.ini, B7B1
+		StringSplit, markB2BKeyCount, B7B, `n
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		B2B := markB2BKeyCount0
+		loop, %markB2BKeyCount0%
+		{
+			IniRead, markB2BWindowArray%A_Index%, getTitle\markB2B.ini, B7B1, markB2B%A_Index%
+			B4B := % B4B .  markB2BWindowArray%A_Index% . "`n"
+		}
+	}
+	else{
+		IniRead, B6B, getTitle\markB2B.ini, DEFAULT, defaultIndex
+		;counting key number in section
+		IniRead, B7B, getTitle\markB2B.ini, B7B%B6B%
+		StringSplit, markB2BKeyCount, B7B, `n
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		B2B := markB2BKeyCount0
+		loop, %markB2BKeyCount0%
+		{
+			IniRead, markB2BWindowArray%A_Index%, getTitle\markB2B.ini, B7B%B6B%, markB2B%A_Index%
+			B4B := % B4B .  markB2BWindowArray%A_Index% . "`n"
+		}
+	}
+;--------------------   Add Tray
+	;Menu, Tray, add, getTitle 3, B8B
+	Menu, Tray, add, getTitle 3, markB2BWindowSelect
+	return
+
+;============== Parameter ===============
+;========================================
+
+
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+;@@@@@@@@@@@@@@ HotKey @@@@@@@@@@@@@@
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
+ralt & esc::
+	gosub, B11B
+	B2B += 1
+	WinGetTitle,  markB2BWindowArray%B2B%, A
+	loop % B2B-1
+	{
+		if( markB2BWindowArray%A_Index%== markB2BWindowArray%B2B%){
+			B2B -= 1
+			tooltip, Haved markB2Bed,A_ScreenWidth/2, A_ScreenHeight/8,
+			KeyWait, esc
+			tooltip, %B4B%`n,0,0
+			return
+		}
+	}
+	B4B := % B4B .  markB2BWindowArray%B2B% . "`n"
+	tooltip, %B4B%`n,0,0
+	;write in file
+	IniWrite, % markB2BWindowArray%B2B%, getTitle\markB2B.ini, B7B%B6B%, markB2B%B2B%
+	;;;;;;;;;;;;;;
+	KeyWait, esc
+	KeyWait, rshift
+	settimer,markB2BWindowcan_tool, -10000 
+	return
+lshift & sc039::
+	tooltip
+	;B3B := !B3B
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	/*
+		-1: The window is minimized 
+		1: The window is maximized
+		0: The window is neither minimized nor maximized.
+	*/
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	WinGet, B12B, MinMax, % markB2BWindowArray%B2B%
+	if(B12B==-1){
+		B3B := 1
+	}
+	else{
+		B3B := 0
+		B13B := % markB2BWindowArray%B2B%
+		if !WinActive(B13B){
+			B3B := 1
+		}
+	}
+	if(B3B==1)
+	{
+		tooltip, Show window,A_ScreenWidth/2, A_ScreenHeight/8,3
+		B14B := 0
+		loop %B2B%{
+			if WinExist(markB2BWindowArray%A_Index%){
+				Winactive( markB2BWindowArray%A_Index%)
+				WinRestore, %  markB2BWindowArray%A_Index%
+				WinActivate,% markB2BWindowArray%A_Index%
+				B14B += 1
+				tooltip, [%B14B%/%B2B%],A_ScreenWidth/2, A_ScreenHeight/8,
+			}
+				tooltip, [%B14B%/%B2B%],A_ScreenWidth/2, A_ScreenHeight/8,
+		}
+		WinSet, AlwaysOnTop, On, %  markB2BWindowArray%B2B%
+		WinSet, AlwaysOnTop, Off, %  markB2BWindowArray%B2B%
+		settimer,markB2BWindowcan_tool, -5000 
+	}
+	else{
+		tooltip, Minimize window,A_ScreenWidth/2, A_ScreenHeight/8,3
+		loop %B2B%{
+			if WinExist( markB2BWindowArray%A_Index%){
+				Winactive( markB2BWindowArray%A_Index%)
+				;Minimize
+				WinMinimize, %  markB2BWindowArray%A_Index%
+				;;;;;;;;;;;;;;;;;;;; WinActivate may break
+				;WinSet, Bottom,, %  markB2BWindowArray%A_Index%
+				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			}
+		}
+	}
+	settimer, markB2BWindowcan_tool, -1000
+	KeyWait, tab
+	return
+B8B:
+ralt & tab::
+	try{
+		; use to close exist "markB2B" window
+		Gui, markB2Bwindow:Add, Button,vmarkB2B_var_top, "to check window exist"
+	}
+	catch{
+		Gui, markB2Bwindow:destroy
+		return
+	}
+	;check all window close
+	gosub, B15B
+	Gui, markB2Bwindow:New
+	gosub, B16B
+	if(B7BCount0>=B6B)
+	{
+		IniRead, markB2B1, getTitle\markB2B.ini, B7B1, markB2B1
+		if(markB2B1!="ERROR"){
+			Gui, markB2Bwindow:Add, Edit, w100 vB27B%B6B% gB17B,
+		}
+	}
+	tooltip
+	;guicontrol to show Select Name
+	loop %B7BCount0%
+	{
+		IniRead, B27B%A_Index%, getTitle\markB2B.ini, B27B, B28B%A_Index%
+	}
+	if(B27B%B6B%!="ERROR")
+	{
+		guicontrol, text, B27B%B6B%, % B27B%B6B%
+	}
+	loop %B2B%
+	{
+		if(A_Index==B2B){
+			Gui, markB2Bwindow:Add, Radio, y+10 vB33B%A_Index% Checked, %  markB2BWindowArray%A_Index%
+		}
+		else{
+			Gui, markB2Bwindow:Add, Radio, y+10  vB33B%A_Index% , %  markB2BWindowArray%A_Index%
+		}
+	}
+	Gui, markB2Bwindow:Add, Button, Default w40 h30 gmarkB2BwindowSelectAdd, &Add
+	Gui, markB2Bwindow:Add, Button, Default w40 h30 x+5 gmarkB2BWindowEdi, &Edit
+	Gui, markB2Bwindow:Add, Button, Default w40 h30 x+5 gmarkB2BWindowSelect, &Select
+	Gui, markB2Bwindow:Add, Button, Default w40 h30 x+5 gmarkB2BWindowDelWindow, &Del
+	Gui, markB2Bwindow:Add, Button, Default w40 h30 x+5 vmarkB2B_var_top gmarkB2BWindowTop, &Top
+	Gui, markB2Bwindow:+AlwaysOnTop
+	Gui, markB2Bwindow:show
+	KeyWait, capslock
+	return
+ralt & rbutton::
+	B4B_ := ""
+	loop %B2B%
+	{
+		B4B_ := % B4B_ .  markB2BWindowArray%A_Index% . "`n"
+	}
+	tooltip, %B4B_%,A_ScreenWidth/2, A_ScreenHeight/8,2
+	KeyWait, rshift
+	tooltip,,,,2
+	return
+
+;============== HotKey ==============
+;====================================
+
+
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+;@@@@@@@@@@@@@@ Label @@@@@@@@@@@@@@@
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
+
+markB2BWindowcan_tool:
+	tooltip, ,,,3
+	tooltip
+	return
+
+markB2BWindowTop:
+	Gui, markB2Bwindow:Submit
+	;GuiControl, markB2Bwindow:focus, markB2B_var_top
+	
+	loop %B2B%
+	{
+		if(B33B%A_Index%==1){
+			markB2BIndex := A_Index
+			;change value
+			B31B := %  markB2BWindowArray%A_Index%
+			markB2BWindowArray%markB2BIndex% := %  markB2BWindowArray%B2B%
+			markB2BWindowArray%B2B% := B31B
+			; write in ini
+			IniWrite, % markB2BWindowArray%B2B%, getTitle\markB2B.ini, B7B%B6B%, markB2B%B2B%
+			IniWrite, % markB2BWindowArray%markB2BIndex%, getTitle\markB2B.ini, B7B%B6B%, markB2B%markB2BIndex%
+			;;;;;;;;;;;;;;
+			break
+		}
+	}
+	gosub, resetB4B
+	Gui, markB2Bwindow:Destroy
+	return
+markB2BWindowDelWindow:
+	Gui, markB2Bwindow:Submit
+	Gui, markB2Bwindow:Destroy
+	Gui, markB2BwindowDel:Destroy
+	loop %B2B%
+	{
+		Gui, markB2BwindowDel:Add, CheckBox, vB18B%A_Index%, % markB2BWindowArray%A_Index%
+	}
+	Gui, markB2BwindowDel:Add, Button, w40 h30 gmarkB2BWindowDelOK, Delete
+	Gui, markB2BwindowDel:Add, Button, w70 h30 x+15 gmarkB2BWindowDelAll, Select All
+	Gui, markB2BwindowDel:+AlwaysOnTop
+	Gui, markB2BwindowDel:show
+	return
+markB2BWindowDelAll:
+	loop %B2B%
+	{
+		GuiControl,, B18B%A_Index%, 1
+	}
+	return
+markB2BWindowDelOK:
+	Gui, markB2BwindowDel:Submit
+	gosub, markB2BWindowDelOKFunction
+	gosub, B8B
+	return
+markB2BWindowDelOKFunction:
+	B20B := 0
+	;checked choice assigned to null.
+	loop %B2B%
+	{
+		if(B18B%A_Index%==1){
+			markB2BWindowArray%A_Index% := null
+			B20B += 1
+		}
+	}
+	B21B := 0
+	loop %B2B%
+	{
+		
+		if(markB2BWindowArray%A_Index%!=null){
+			B21B += 1
+			B31B%B21B% := % markB2BWindowArray%A_Index%
+		}
+	}
+	B2B -= B20B
+	loop %B2B%
+	{
+		markB2BWindowArray%A_Index% := % B31B%A_Index%
+		IniWrite, % markB2BWindowArray%A_Index%, getTitle\markB2B.ini, B7B%B6B%, markB2B%A_Index%
+	}
+	loop %B20B%
+	{
+		B22B := B2B + A_Index
+		IniDelete, getTitle\markB2B.ini, B7B%B6B%, markB2B%B22B%
+	}
+	B20B := null
+	B22B := null
+	B21B := null
+	;if section content all delete, change last section to this section
+	if(B2B == 0)
+	{
+		gosub, B16B
+	
+		;if delete last section
+		if(B6B==B7BCount0){
+			B7BCount0 -= 1
+			IniRead, B7B, getTitle\markB2B.ini, B7B%B7BCount0%
+			StringSplit, markB2BKeyCount, B7B, `n
+			loop %markB2BKeyCount0%
+			{
+				IniRead, markB2BWindowArray%A_Index%, getTitle\markB2B.ini, B7B%B7BCount0%, markB2B%A_Index%
+				
+			}
+
+			B6B -=1
+			if(B6B==0){
+				B6B :=1
+			}
+			gosub, B23B
+			B24B := B6B +1
+
+			IniDelete, getTitle\markB2B.ini, B7B%B24B%
+			IniDelete, getTitle\markB2B.ini, B27B, B28B%B24B%
+		}
+		else{
+			;counting key number in section
+			IniRead, B7B, getTitle\markB2B.ini, B7B%B7BCount0%
+			StringSplit, markB2BKeyCount, B7B, `n
+			loop %markB2BKeyCount0%
+			{
+				IniRead, markB2BWindowArray%A_Index%, getTitle\markB2B.ini, B7B%B7BCount0%, markB2B%A_Index%
+				IniWrite, % markB2BWindowArray%A_Index%, getTitle\markB2B.ini,B7B%B6B%, markB2B%A_Index%
+			}
+			IniDelete, getTitle\markB2B.ini, B7B%B7BCount0%
+			;write last B28B to the delete one
+			IniRead, B25B, getTitle\markB2B.ini, B27B, B28B%B7BCount0%
+			IniDelete, getTitle\markB2B.ini, B27B, B28B%B7BCount0%
+			IniWrite, %B25B%, getTitle\markB2B.ini,  B27B, B28B%B6B%
+		}
+		if(B7BCount0==0){
+			markB2BFile := FileOpen("getTitle\markB2B.ini","w")
+			markB2BFile.write("[DEFAULT]`ndefaultIndex=1`n[B27B]`n[B7B1]")
+			markB2BFile.close
+		}
+		gosub,B16B
+
+		B2B := markB2BKeyCount0
+	}
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	gosub, resetB4B
+	return
+markB2BWindowEdi:
+	Gui, markB2Bwindow:Submit
+	Gui, markB2Bwindow:destroy
+	Gui, markB2BwindowEdit:New
+	loop %B2B%
+	{
+		Gui, markB2BwindowEdit:Add, Edit, vB26B%A_Index%, %  markB2BWindowArray%A_Index%
+	}
+	Gui, markB2BwindowEdit:Add, Button, Default gmarkB2BWindowEditOK, OK
+	Gui, markB2BwindowEdit:+AlwaysOnTop
+	Gui, markB2BwindowEdit:show
+	return
+markB2BWindowEditOK:
+	Gui, markB2BwindowEdit:Submit
+	loop %B2B%
+	{
+		markB2BWindowArray%A_Index% := % B26B%A_Index%
+		IniWrite, % markB2BWindowArray%A_Index%, getTitle\markB2B.ini, B7B%B6B%, markB2B%A_Index%
+	}
+	gosub, resetB4B
+	gosub, B8B
+	return
+markB2BWindowSelect:
+	Gui, markB2Bwindow:Destroy
+	Gui, markB2BwindowSelect:New
+	gosub, B16B
+	loop %B7BCount0%
+	{
+		IniRead, B27B%A_Index%, getTitle\markB2B.ini, B27B, B28B%A_Index%
+		Gui, markB2BwindowSelect:Add, Radio, vB7BSECTION%A_Index% gshowB7BSECTIONCONTENT, Select%A_Index% 
+		if(B27B%A_Index%!="ERROR"){
+			GuiControl, text, B7BSECTION%A_Index%, % B27B%A_Index%
+		}
+	}
+	Gui, markB2BwindowSelect:Add, Button, Default w40 h30 vmarkB2BwindowSelectOKButton gmarkB2BwindowSelectOK, OK
+	GuiControl, Disable, markB2BwindowSelectOKButton
+	Gui, markB2BwindowSelect:Add, Button, Default w40 h30 x+20 gmarkB2BwindowSelectAdd, Add
+	Gui, markB2BwindowSelect:+AlwaysOnTop
+	Gui, markB2BwindowSelect:show
+	return
+markB2BwindowSelectAdd:
+	gosub, B16B
+	B6B := B7BCount0 + 1
+	gosub, B23B
+	gosub, B30B
+	gosub, resetB4B
+	gosub, B10B
+	gosub, markB2BwindowSelectAddCloseTooltip
+	Gui, markB2BwindowSelect:destroy
+	Gui, markB2Bwindow:destroy
+	return
+
+markB2BwindowSelectOK:
+	Gui, markB2BwindowSelect:submit
+	B6B := B7BSECTION_B21B
+	gosub, B23B
+	B2B := markB2BKeyCount0
+	loop %B2B%
+	{
+		IniRead, markB2BWindowArray%A_Index%, getTitle\markB2B.ini, B7B%B6B%, markB2B%A_Index%
+		
+	}
+	; tooltip 4
+	SetTimer, B4B_Gui_tooltip, off
+	tooltip,,,,4
+	;;;;;;;;;;;;
+	gosub, resetB4B
+	gosub, B8B
+	return
+
+showB7BSECTIONCONTENT:
+	Gui, markB2BwindowSelect:submit, nohide
+	GuiControl, Enable, markB2BwindowSelectOKButton
+	loop %B7BCount0%
+	{
+		if(B7BSECTION%A_Index% == 1){
+			;counting key number in section
+			IniRead, B7B, getTitle\markB2B.ini, B7B%A_Index%
+			StringSplit, markB2BKeyCount, B7B, `n
+			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			B4B_Gui := ""
+			B7BSECTION_B21B := A_Index
+			loop %markB2BKeyCount0%
+			{
+				IniRead, markB2B%A_Index%, getTitle\markB2B.ini, B7B%B7BSECTION_B21B%, markB2B%A_Index%
+				B4B_Gui := % B4B_Gui .  markB2B%A_Index% . "`n"
+			}
+		}
+	}
+	SetTimer, B4B_Gui_tooltip, 50
+	return
+markB2BwindowSelectGuiClose:
+markB2BwindowSelectAddCloseTooltip:
+	SetTimer, B4B_Gui_tooltip, off
+	tooltip,, , , 4 
+	Gui, markB2BwindowSelect:destroy
+	return
+B4B_Gui_tooltip:
+	;tooltip,%B4B_Gui%,A_ScreenWidth/2, A_ScreenHeight/8, 4 
+	tooltip,%B4B_Gui%,,, 4 
+	return
+resetB4B:
+	B4B := ""
+	loop %B2B%
+	{
+		B4B := % B4B .  markB2BWindowArray%A_Index% . "`n"
+	}
+	return
+
+B10B:
+	;counting key number in section
+	IniRead, B7B, getTitle\markB2B.ini, B7B%B6B%
+	StringSplit, markB2BKeyCount, B7B, `n
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	B2B := markB2BKeyCount0
+	loop, %markB2BKeyCount0%
+	{
+		IniRead, markB2BWindowArray%A_Index%, getTitle\markB2B.ini, B7B%B6B%, markB2B%A_Index%
+		B4B := % B4B .  markB2BWindowArray%A_Index% . "`n"
+	}
+	gosub, resetB4B
+	return
+
+
+/*
+wheelSwithSectionContent:
+	gosub, B16B
+	wheelCountSectionNumber := B7BCount0 +1
+	return
+*/
+B16B:
+	;count number of sections
+	IniRead, B7BSECTION, getTitle\markB2B.ini
+	StringSplit, B7BCount, B7BSECTION, `n
+	B7BCount0 -= B5B ;delete "default" section
+	return
+B17B:
+	Gui, markB2Bwindow:submit, nohide
+	;gosub, B16B
+	IniWrite, % B27B%B6B%, getTitle\markB2B.ini,B27B, B28B%B6B% 
+	return
+B23B:
+	IniWrite, %B6B%, getTitle\markB2B.ini, DEFAULT, defaultIndex
+	return
+B30B:
+	IniWrite, "", getTitle\markB2B.ini, B7B%B6B%, markB2B1
+	return
+B11B:
+	;count key number
+	IniRead, B7B, getTitle\markB2B.ini, B7B%B6B%
+	StringSplit, markB2BKeyCount, B7B, `n
+	if(markB2BKeyCount0==1){
+		IniRead, markB2B1, getTitle\markB2B.ini, B7B%B6B%, markB2B1
+		if(markB2B1==""){
+		IniDelete, getTitle\markB2B.ini, B7B%B6B%, markB2B1
+		B2B := 0
+		}
+	}
+	gosub, resetB4B
+	
+	return
+markB2BwindowGuiClose:
+B15B:
+	Gui, markB2Bwindow:Destroy
+	Gui, markB2BwindowSelect:Destroy
+	Gui, markB2BwindowDel:Destroy
+	Gui, markB2BwindowEdit:Destroy
+	return
+
+;============== Label ===============
+;====================================
+;============== get title 3 ===============
+;==========================================
+
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+;@@@@@@@@@@@@@@ edit table @@@@@@@@@@@@@@
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+WhiteBoard_parameter:
+	WhiteBoard_width := 250
+	WhiteBoard_height := 225
+	return
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+;@@@@@@@@@ Run edit_table2 @@@@@@@@@@
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+;******************
+;** edit_table 2 **
+;******************
+capslock & /::
+;capslock & sc00e:: ;sc00e >> delete
+	try{
+		run, edit_table2.ahk
+	}
+	catch{
+		tooltip, "edit_table2.ahk" is not existed.
+		sleep, 2000
+		tooltip
+	}
+	return
+;******************
+
+;====================================
+
+edit_table__:
+capslock & enter::
+esc & wheelup::
+	try{
+		;MouseGetPos, whiteboard_x, whiteboard_y ;open window position
+		;/*
+		whiteboard_x := A_ScreenWidth/2
+		whiteboard_y := A_ScreenHeight*5/7
+		;*/
+		tooltip,Show WhiteBoard,% whiteboard_x - 50,% whiteboard_y - 50,10
+		Gui, whiteboard:font, s12
+		Gui, whiteboard:Add, Button,w50 h30 gcopy_button_whiteboard, &copy 
+		Gui, whiteboard:Add, Button,w50 h30 x+15 vwhiteboardbutton gpast_button, &paste 
+		Gui, whiteboard:Add, Button,w50 h30 x+15 gundo_button, &undo 
+		Gui, whiteboard:Add, Button,w50 h30 x+15 gclear_button, CR
+		Gui, whiteboard:Add, Button,w1 h1 x+0 Hide gfocus_edit_, &edit 
+		;-VScroll -> cancel scroll
+		gosub, WhiteBoard_parameter
+		Gui, whiteboard:Add, Edit,w%WhiteBoard_width% h%WhiteBoard_height% r10 x15 vwhiteboardVariable gautoResizeLine -Wrap  +HScroll WantTab, ;-VScroll ;vwhiteboardVariable -> mark window exist
+		Gui, whiteboard:+AlwaysOnTop
+		whiteboard_x -=100
+		whiteboard_y -=100
+		Gui, whiteboard:show, x%whiteboard_x% y%whiteboard_y% AutoSize, temp Blank Table
+		GuiControl,whiteboard:focus, whiteboardVariable
+	}
+	catch{
+		gosub, whiteboardGuiClose
+	}
+	settimer, can_whiteboard, -2000
+	keywait, esc
+	return
+clear_button:
+	guicontrol, whiteboard:Text, whiteboardVariable, 
+	guicontrol, whiteboard:Text, whiteboardVariable, %clipboard%
+	return
+focus_edit_:
+	guicontrol, whiteboard:focus, whiteboardVariable
+	return
+copy_button_whiteboard:
+	gui, whiteboard:submit, nohide
+	;prevent clearing clipboard
+	if(whiteboardVariable==null)
+		return
+	;;;;;;;;;;;;;;;;;;;;;;;;;;
+	clipboard =
+	clipboard := whiteboardVariable
+	clipwait, 3
+	tooltip,%clipboard%,,,10
+	settimer, can_whiteboard,-2000
+	return
+whiteboardGuiClose:
+:?:wbclose.::
+	tooltip,Destroy WhiteBoard,% whiteboard_x - 50,% whiteboard_y - 50,10
+	Gui, whiteboard:Destroy
+	settimer, can_whiteboard, -2000
+	return
+
+can_whiteboard:
+	tooltip,,,,10
+	return
+
+autoResizeLine:
+	temp_using_to_undo := whiteboardVariable
+	Gui, whiteboard:submit, nohide
+	whiteboard_temp_string = %whiteboardVariable%
+	StringSplit, lineCount, whiteboard_temp_string, `n
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	detect width
+	whiteboard_width := StrSplit(whiteboardVariable, "`n")
+	max_width_whiteboard := StrLen(whiteboard_width[1])
+	loop, % whiteboard_width.MaxIndex()
+	{
+		if(max_width_whiteboard<StrLen(whiteboard_width[A_Index])){
+			max_width_whiteboard := StrLen(whiteboard_width[A_Index])
+		}
+	}
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;/*
+	if(max_width_whiteboard>10){
+		max_width_whiteboard -= 10
+		max_width_whiteboard := max_width_whiteboard*10+250 ;WhiteBoard_width    ; WhiteBoard_width  > 250
+		if(max_width_whiteboard<=(A_ScreenWidth/2))
+			GuiControl, whiteboard:Move, whiteboardVariable,% "w" . max_width_whiteboard
+		if(max_width_whiteboard>(A_ScreenWidth/2))
+			GuiControl, whiteboard:Move, whiteboardVariable,% "w" . (A_ScreenWidth/2)
+		;GuiControl, whiteboard:Text, whiteboardVariable, %whiteboardVariable%
+	}
+	else{
+		GuiControl, whiteboard:Move, whiteboardVariable,w250  ; WhiteBoard_width  > 250
+
+	}
+	if(lineCount0>=10){
+		createLine := lineCount0 - 10
+		lineCount0 := WhiteBoard_height
+		lineCount0 += createLine*25 
+		if(lineCount0<=(A_ScreenHeight/2))
+			GuiControl, whiteboard:Move, whiteboardVariable,% "h" . lineCount0
+		if(lineCount0>(A_ScreenHeight/2)){
+			GuiControl, whiteboard:Move, whiteboardVariable,% "h" . (A_ScreenHeight/2)
+		}
+		;GuiControl, whiteboard:Text, whiteboardVariable, %whiteboardVariable%
+	}
+	else{
+		GuiControl, whiteboard:Move, whiteboardVariable,h%WhiteBoard_height%
+	}
+
+	Gui, whiteboard:+AlwaysOnTop
+	Gui, whiteboard:show, AutoSize
+*/
+
+	return
+past_button:
+	Gui, whiteboard:submit, nohide
+	whiteboard_temp_string = %whiteboardVariable%
+	send, ^v
+	whiteboard_temp_string = %whiteboard_temp_string%%clipboard%
+	GuiControl, whiteboard:Text, whiteboardVariable, %whiteboard_temp_string%
+	gosub, autoResizeLine
+	return
+undo_button:
+	GuiControl, whiteboard:Text, whiteboardVariable, %temp_using_to_undo%
+	gosub, autoResizeLine
+	return
+;============== edit table ==============
+;========================================
 
