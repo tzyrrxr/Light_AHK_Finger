@@ -1,10 +1,30 @@
 ﻿#singleinstance, force
 ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+;@@@@@@@@@@@@@@ Parameter @@@@@@@@@@@@@@@
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+;----------------------------------------   clip_image
+gosub, clip_image_parameter
+
+
+
+;--------------------
+;-- Parameter End ---
+;--------------------
+return
+;__ Parameter End ___
+;____________________
+
+;============== Parameter ===============
+;========================================
+
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 ;@@@@@@@@@@@@@@ clip_image @@@@@@@@@@@@@@
 ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 ;----------------
 ;-- parameter ---
 ;----------------
+clip_image_parameter:
 Hotkey, LAlt  & sc039 , CreateCapWindow , On  ;<------------------    Adjust the hotkey value to suit your needs / wants 
 Hotkey, sc15d & n , CreateCapWindow, On
 Hotkey, tab & Lalt, CreateCapWindow, On
@@ -28,7 +48,7 @@ SetWorkingDir, %A_ScriptDir%\Saved Clips ;Set the saved clips folder as the work
 Handles := [] ; Create an array to hold the name of the different gui's.
 ;Index := 0 ;Used as the name of the current gui cap window.
 Index := 0 ;Used as the name of the current gui cap window.
-;return   ; End of Auto-Execute Section.
+return   ; End of Auto-Execute Section.
 ;__ parameter ___
 ;________________
 
