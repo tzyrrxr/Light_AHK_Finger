@@ -1414,6 +1414,10 @@ sc039 & ,::
 	send,{raw}[]
 	send, {left}
 	return
+sc039 & sc002::send,{down}
+sc039 & sc003::send,{up}
+sc039 & sc004::send,{right}
+sc039 & sc029::send,{left}
 
 
 
