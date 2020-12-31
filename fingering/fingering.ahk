@@ -227,7 +227,10 @@ delete_temp_new_diretory:
 
 ;--------------------   put file content into array
 
-	Loop, Read, ..\label.ahk
+	if(ahk_name==null){
+		ahk_name = ..\label.ahk
+	}
+	Loop, Read, %ahk_name%
 	{
 		If (RegExMatch(A_LoopReadLine,"U).[^`;.]*:$",label) ) 
 		{
@@ -1537,7 +1540,10 @@ sc039 & l::send,{raw}9
 sc039 & `;::send,{raw}0
 
 
-sc039 & z::send,{raw}+
+sc039 & z::
+sc039 & sc02c:: ;sc02c -> z
+	send,{+}
+	return
 sc039 & x::send,{raw}-
 sc039 & c::
 	send,{raw}{}
