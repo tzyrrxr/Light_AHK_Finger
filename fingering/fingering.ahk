@@ -20,6 +20,10 @@ gosub, getTitleParameter3
 ;----------------------------------------   edit table
 gosub, WhiteBoard_parameter
 
+
+;----------------------------------------   search support
+gosub, read_list_search_index
+
 ;--------------------
 ;-- Parameter End ---
 ;--------------------
@@ -198,6 +202,131 @@ delete_temp_new_diretory:
 	return
 ;============== Function ==============
 ;======================================
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+;@@@@@@@@@@@@@@ Input support @@@@@@@@@@@@@@@
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+;--------------------------
+;-- push label into list --
+;--------------------------
+
+@-show_search_index:
+
+;--------------------   check index list finish
+	if(all_index_list_finish==null){
+		all_index_list_finish := 0
+	}
+	all_list := []
+	list_script_place := []
+
+;--------------------   put file content into array
+
+	Loop, Read, ..\fingering.ahk
+	{
+		If (RegExMatch(A_LoopReadLine,"U).[^`;.]*:$",label) ) 
+		{
+			if(!RegExMatch(label, "::|@-")){
+				
+;--------------------   replace ;
+				label := StrReplace(label, ":")
+				;list.=label "`n"
+				all_list.Push(label)
+			}
+		}
+	}
+	all_index_list_finish := 1
+	return
+
+;__ push label into list __
+;__________________________
+;----------------
+;-- input gui ---
+;----------------
+;--------------------   read index
+read_list_search_index:
+	gosub, @-show_search_index
+;--------------------   Add Tray
+	Menu, Tray, add, search_label_gui, search_label_gui
+	return
+search_label_gui:
+capslock & f::
+
+
+;--------------------   check index list is finished
+/*
+	if(all_index_list_finish==0){
+		tooltip, too quick search. wait.
+		sleep, 2000
+		tooltip
+		return
+	}
+*/
+
+;--------------------   english
+	try{
+		gosub, english
+	}
+	;gui, sup_input:new
+	try{
+		try{
+			gui, sup_input:Font, s10 bold, Helvetica
+		}
+		catch{
+			gui, sup_input:Font, s10 bold, 
+		}
+		gui, sup_input:add, text, , Support Input
+		gui, sup_input:add, edit, vsupport_input g@-support_input ;WantTab
+		gui, sup_input:add, button, g@-support_input_OK Default, OK
+		gui, sup_input:add, edit,w250 r10 vshow_support_input_index ;Disabled
+		gui, sup_input: +AlwaysOnTop
+		gui, sup_input:show, ,Support Input HotString
+	}
+	catch{
+		gui, sup_input:destroy
+	}
+	return
+
+@-support_input_OK:
+	gui, sup_input:hide
+	gui, sup_input:submit
+	gui, sup_input:destroy
+	try{
+		gosub, %support_input%
+	}
+	catch{
+		tooltip, Index faliure
+		sleep, 2000
+		tooltip
+	}
+	return
+@-support_input:
+	gui, sup_input:submit, NoHide
+
+;--------------------   search array element
+	show_information_element = 
+	for index, element in all_list
+	{
+		if(RegExMatch(element, "i)"support_input)){
+			show_information_element.= element "`n"
+		}
+	}
+	guicontrol, text, show_support_input_index, % show_information_element
+
+;--------------------   if input is null
+	if(support_input==null){
+		guicontrol, text, show_support_input_index, 
+	}
+	return
+
+sup_inputGuiClose:
+	gui, sup_input:destroy
+	return
+
+;__ input gui ___
+;________________
+
+;============== Input support ===============
+;============================================
+
 ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 ;@@@@@@@@@@@@@@ Tooltip @@@@@@@@@@@@@@@
 ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -1370,6 +1499,7 @@ sc039::send,{space}
 
 lalt::PostMessage, 0x50, 0, 0x4040404,, A
 ralt::PostMessage, 0x50, 0, 0x4090409,, A
+tab::send, {tab}
 
 ;suspend
 capslock & lshift::Suspend
@@ -1521,7 +1651,7 @@ GUI_comment:
 	gui, ahkct: add, edit, vcomment_sign
 	gui, ahkct: add, text, ,Subject
 	gui, ahkct: add, edit, vcomment_subject
-	gui, ahkct: add, button, gsimple_comment, OK
+	gui, ahkct: add, button, gsimple_comment default, OK
 	gui, ahkct:+alwaysontop
 	gui, ahkct:show, w300, Comment
 	return
@@ -1550,7 +1680,7 @@ comment@:
 	gui, ahkct: add, edit, vcomment_sign
 	gui, ahkct: add, text, ,Subject
 	gui, ahkct: add, edit, vcomment_subject
-	gui, ahkct: add, button, gsend_comment, OK
+	gui, ahkct: add, button, gsend_comment default, OK
 	gui, ahkct:+alwaysontop
 	gui, ahkct:show, w300, Comment
 	return
@@ -1563,7 +1693,7 @@ comment*:
 	gui, ahkct: add, edit, vcomment_sign
 	gui, ahkct: add, text, ,Subject
 	gui, ahkct: add, edit, vcomment_subject
-	gui, ahkct: add, button, gsend_comment, OK
+	gui, ahkct: add, button, gsend_comment default, OK
 	gui, ahkct:+alwaysontop 
 	gui, ahkct:show, w300, Comment
 	return
@@ -4091,4 +4221,43 @@ undo_button:
 	return
 ;============== edit table ==============
 ;========================================
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+;@@@@@@@@@@@@@@ Third @@@@@@@@@@@@@@@
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+;--------------
+;-- language --
+;--------------
+;https://stackoom.com/question/3y7ml/%E5%88%87%E6%8D%A2%E9%94%AE%E7%9B%98%E5%B8%83%E5%B1%80%E6%9C%89%E6%95%88-%E4%BD%86%E5%B9%B6%E9%9D%9E%E6%80%BB%E6%98%AF%E5%A6%82%E6%AD%A4
+/*
+Lang := { "EN": 0x4090409 , "RU": 0x4190419 }
+WinGetActiveTitle , CurrentActive
+WinActivate , Program Manager
+ControlGet , CtrlID , Hwnd ,, SysListView321 , Program Manager
+InputLocaleID := DllCall( "GetKeyboardLayout" , "UInt" , DllCall( "GetWindowThreadProcessId" , "Ptr" , CtrlID , "Ptr", 0 ) , "Ptr" )
+SendMessage , 0x50 ,, % ( InputLocaleID = Lang.EN ? Lang.RU : Lang.EN ) ,, ahk_id %CtrlID%
+WinActivate , % CurrentActive
+Return
+*/
+chinese:
+	;Lang := { "EN": 0x4090409 , "RU": 0x4190419 }
+	WinGetActiveTitle , CurrentActive
+	WinActivate , Program Manager
+	ControlGet , CtrlID , Hwnd ,, SysListView321 , Program Manager
+	InputLocaleID := DllCall( "GetKeyboardLayout" , "UInt" , DllCall( "GetWindowThreadProcessId" , "Ptr" , CtrlID , "Ptr", 0 ) , "Ptr" )
+	SendMessage , 0x50 ,, 0x4040404 ,, ahk_id %CtrlID%
+	WinActivate , % CurrentActive
+	Return
+english:
+	;Lang := { "EN": 0x4090409 , "RU": 0x4190419 }
+	WinGetActiveTitle , CurrentActive
+	WinActivate , Program Manager
+	ControlGet , CtrlID , Hwnd ,, SysListView321 , Program Manager
+	InputLocaleID := DllCall( "GetKeyboardLayout" , "UInt" , DllCall( "GetWindowThreadProcessId" , "Ptr" , CtrlID , "Ptr", 0 ) , "Ptr" )
+	SendMessage , 0x50 ,, 0x4090409 ,, ahk_id %CtrlID%
+	WinActivate , % CurrentActive
+	Return
+;__ language __
+;______________
 
+;============== Third ===============
+;====================================
