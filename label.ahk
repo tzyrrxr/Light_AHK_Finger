@@ -6,6 +6,8 @@ reload:
 ahk_reload_re:
 	reload
 	return
+test:
+	return
 ;============== AHK ===============
 ;==================================
 
