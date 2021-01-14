@@ -1,0 +1,16 @@
+::echo off
+
+SET youWantPause = yes
+::SET youWantPause = no
+
+::Add
+if %youWantPause%==yes (git add * && pause) else (git add *)
+
+::Commit
+if %youWantPause%==yes (git commit -m "%date%" && pause) else (git commit -m "%date%")
+
+::Push
+if %youWantPause%==yes (git push && pause) else (git push)
+
+
+pause
