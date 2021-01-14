@@ -1,6 +1,6 @@
-~
-un~
-.swp
+*~
+*un~
+*.swp
 backup
 pull.bat
 update.bat
