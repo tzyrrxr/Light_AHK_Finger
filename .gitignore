@@ -3,4 +3,4 @@
 *.swp
 backup
 pull.bat
-update.bat
+update_to_github.bat
