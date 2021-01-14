@@ -1,7 +1,7 @@
-::echo off
+echo off
 
-SET youWantPause = yes
-::SET youWantPause = no
+SET youWantPause=yes
+::SET youWantPause=no
 
 ::Add
 if %youWantPause%==yes (git add * && pause) else (git add *)
