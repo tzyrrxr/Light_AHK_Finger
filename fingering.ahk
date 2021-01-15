@@ -3684,7 +3684,6 @@ sc056 & sc039:: ;sc056 -> "\" key
 
 copyImage:
 	pToken := Gdip_Startup()
-;	Gdip_SetBitmapToClipboard(pBitmap := Gdip_CreateBitmapFromFile("C:\Users\sjLin\Google Drive\AutoHotKey\Applet\Screen Clipper Tool\Saved Clips\Saved Clip 20191217213804.png"))
 	Gdip_SetBitmapToClipboard(pBitmap := Gdip_CreateBitmapFromFile(Image_copy_path))
 	Gdip_DisposeImage_copyToclipboard(pBitmap)
 	Gdip_Shutdown_copyToclipboard(pToken)
