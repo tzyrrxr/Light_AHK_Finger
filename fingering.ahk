@@ -165,6 +165,9 @@ lalt & c::send, ^w
 
 lalt & a::send, {enter}
 
+
+ralt & i::sendinput, \
+
 capslock & u::
 	send, ^c
 	return
